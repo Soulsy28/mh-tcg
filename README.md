@@ -85,12 +85,11 @@ Les profils et les decks restent liés à cette adresse locale. Pour jouer à di
 
 ## Sources du jeu
 
-- [Liste Carte Propre](https://docs.google.com/document/d/1LnLH4dGly_TSGdkHMiazU8anmCR4apbtQITymBWxxZc) dans Google Drive.
-- [Règles du jeu](https://docs.google.com/document/d/1JD05fFSeNe2hVgstap0aKeESpBcWrytNSHsRqxt7M1A) dans Google Drive.
+- Le catalogue des cartes et les règles validés par le créateur.
 - Les précisions du créateur sur la priorité Réflexe et l'Interposition unique.
-- Les cartes finales de `C:/Users/Druart/Pictures/MhTCG Image/Carte Final GPT`, copiées et optimisées en WebP ; les originaux ne sont pas modifiés.
+- Les illustrations finales fournies par le créateur, copiées et optimisées en WebP ; les originaux ne sont pas modifiés.
 
-Le dossier statique contient 203 cartes numérotées, sept Chefs compris, et deux images supplémentaires de jetons. Le fichier `dist/version.json`, produit par la préparation, conserve les révisions du catalogue et des règles utilisées.
+Le dossier statique contient 203 cartes numérotées, sept Chefs compris, et deux images supplémentaires de jetons. Le fichier `dist/version.json`, produit par la préparation, conserve la version du catalogue et le nombre de cartes, sans lien vers les documents privés.
 
 ## Vérifier et préparer une version
 

@@ -39,7 +39,7 @@ test('pseudo normalisé et doublons Unicode refusés avant et après dérivation
   await assert.rejects(store.register('STRASSE','mot-de-passe'),/existe déjà/);
   await store.register('Ａｌｅｘ','mot-de-passe');
   await assert.rejects(store.register('alex','mot-de-passe'),/existe déjà/);
-  const result = await Promise.allSettled([store.register('Druart','autre-secret'),store.register('DRUART','autre-secret')]);
+  const result = await Promise.allSettled([store.register('Chasseur','autre-secret'),store.register('CHASSEUR','autre-secret')]);
   assert.equal(result.filter(value=>value.status==='fulfilled').length,1);
 });
 

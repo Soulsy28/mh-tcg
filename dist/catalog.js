@@ -4,14 +4,10 @@
   "version": "2026-11-01",
   "sources": {
     "cards": {
-      "title": "Liste Carte Propre",
-      "url": "https://docs.google.com/document/d/1LnLH4dGly_TSGdkHMiazU8anmCR4apbtQITymBWxxZc",
-      "revision": "AHj4eMQogh8pn3ugzm_CZtk3e1m5NKfqGnhz5ML8gcLO4QmivLTp5QZSMqA5jPEXG70hb4kMU9k1H8M3TFn4gm7fpBbsI36eEKL4yOhOXmQ"
+      "title": "Catalogue des cartes"
     },
     "rules": {
-      "title": "Regles_MH_TCG",
-      "url": "https://docs.google.com/document/d/1JD05fFSeNe2hVgstap0aKeESpBcWrytNSHsRqxt7M1A",
-      "revision": "AHj4eMTsAjljNvha00H13n7yLQZDHyosAqLUF_jem3rFzna6AZWzdsR4RyN1wGis4rPbAETwXqtjDUavGWHqvdI3Kmvrs704V1wfbewPWaU"
+      "title": "Règles du jeu"
     }
   },
   "clarifications": {

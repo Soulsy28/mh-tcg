@@ -1,7 +1,7 @@
 'use strict';
 
 // Le site est déjà écrit en HTML/CSS/JS. La préparation vérifie le dossier
-// statique et y ajoute uniquement la provenance et les métadonnées d'hébergement.
+// statique et y ajoute uniquement les métadonnées publiques de la version.
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -76,6 +76,11 @@ if (fs.existsSync(hostingPath)) {
   fs.copyFileSync(hostingPath, path.join(dist, '.openai', 'hosting.json'));
 }
 
+// Les liens et identifiants des documents privés ne sont pas publiés.
+function publicSource(source) {
+  return typeof source?.title === 'string' ? { title: source.title } : null;
+}
+
 const metadata = {
   app: 'mh-tcg-guilde',
   version: packageJson.version,
@@ -83,8 +88,8 @@ const metadata = {
   deployment: 'static',
   catalogVersion: catalog.version,
   sources: {
-    cards: catalog.sources?.cards || null,
-    rules: catalog.sources?.rules || null
+    cards: publicSource(catalog.sources?.cards),
+    rules: publicSource(catalog.sources?.rules)
   },
   counts: { cards: numbered.length, chiefs: chiefs.length, tokens: tokens.length, images: images.size, automated: engine.SUPPORTED_IDS.length }
 };
