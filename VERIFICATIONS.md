@@ -1,10 +1,12 @@
-# Vérification de la version 0.2
+# Vérification de la version 0.3
 
 Vérifications du 2 novembre 2026.
 
-98 tests automatisés réussissent : règles de base et cartes du sous-ensemble automatisé, parties complètes, table libre, profils locaux et séparation des sauvegardes, recherche et validation des decks, protocole P2P, droits des joueurs et masquage des cartes cachées.
+106 tests automatisés réussissent : règles de base et cartes du sous-ensemble automatisé, parties complètes, table libre, profils locaux et séparation des sauvegardes, recherche et validation des decks, protocole P2P, droits des joueurs, masquage des cartes cachées et langue de présentation.
 
-Les parcours suivants ont également été utilisés dans le navigateur :
+La version 0.3 a été vérifiée dans le navigateur : passage FR/EN et retour, langue conservée après rechargement, chargement des illustrations anglaises, recherche « elder dragon » renvoyant les six cartes attendues, détails anglais d’une carte, conservation des noms personnels de profil et de deck (« Accueil » reste « Accueil »), début d’une partie automatisée et conservation de la même carte sélectionnée lors d’un changement de langue. Les 205 illustrations anglaises ont été décodées et vérifiées, en plus des 205 françaises. Les textes de règles anglais viennent du catalogue validé ; certains messages avancés du moteur sans traduction dédiée restent en français.
+
+Les parcours suivants avaient également été utilisés dans le navigateur pour la version 0.2 ; ils restent couverts par les tests de cette mise à jour :
 
 - Création de profils distincts avec pseudo et mot de passe, sans email.
 - Présence des deux decks de départ sauvegardés.

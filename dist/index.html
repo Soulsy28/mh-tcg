@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="game.css">
   <link rel="stylesheet" href="site.css">
   <script defer src="catalog.js"></script>
+  <script defer src="i18n.js"></script>
   <script defer src="engine.js"></script>
   <script defer src="table.js"></script>
   <script defer src="profiles.js"></script>
@@ -23,7 +24,10 @@
   <header class="site-header">
     <a class="brand" href="#accueil" aria-label="MH TCG, accueil"><span class="crest" aria-hidden="true">✦</span><span><strong>MONSTER HUNTER <b>TCG</b></strong><small>LA GUILDE DES CHASSEURS</small></span></a>
     <nav id="navigation" aria-label="Navigation principale"><a href="#accueil" data-route="accueil">Accueil</a><a href="#decks" data-route="decks">Deck builder</a><a href="#cartes" data-route="cartes">Bibliothèque</a><a href="#jouer" data-route="jouer">Jouer <span class="nav-dot"></span></a></nav>
-    <div id="profile-control"><button class="button primary" data-do="account">Se connecter</button></div>
+    <div class="header-actions">
+      <div id="profile-control"><button class="button primary" data-do="account">Se connecter</button></div>
+      <button id="language-switch" class="language-switch" type="button" data-no-i18n aria-label="Langue actuelle : français. Passer en anglais." title="Passer en anglais"><span class="language-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><path fill="#002395" d="M0 0h20v40H0z"/><path fill="#fff" d="M20 0h20v40H20z"/><path fill="#ed2939" d="M40 0h20v40H40z"/></svg></span><span>FR</span></button>
+    </div>
   </header>
   <main id="site"><div class="loading"><span class="crest">✦</span><h1>Bienvenue à la Guilde</h1><p>Préparation de la table…</p></div></main>
   <footer class="site-footer"><span>MH TCG <b>·</b> Créé pour les chasseurs, par un chasseur.</span><span><button data-do="about">Règles & fonctionnement</button><b>·</b><span class="storage-dot"></span>Decks enregistrés dans ce navigateur</span></footer>

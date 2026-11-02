@@ -56,6 +56,15 @@ const imageDirectory = path.join(dist, 'assets', 'cards');
 const imageFiles = fs.readdirSync(imageDirectory).filter(name => /\.webp$/i.test(name));
 if (images.size !== 205 || imageFiles.length !== 205) throw new Error('Les 205 images françaises finales doivent être présentes.');
 
+const englishImages = new Set();
+for (const card of catalog.cards) {
+  if (!card.nameEn || !card.textEn) throw new Error(`La traduction anglaise de ${card.id} est absente.`);
+  const englishImage = staticFile('assets/cards/en/' + path.basename(card.image), `L’image anglaise de ${card.id}`);
+  englishImages.add(englishImage);
+}
+const englishImageFiles = fs.readdirSync(path.join(imageDirectory, 'en')).filter(name => /\.webp$/i.test(name));
+if (englishImages.size !== 205 || englishImageFiles.length !== 205) throw new Error('Les 205 images anglaises finales doivent être présentes.');
+
 const hostingPath = path.join(root, '.openai', 'hosting.json');
 if (fs.existsSync(hostingPath)) {
   const rawHosting = fs.readFileSync(hostingPath, 'utf8');
@@ -91,10 +100,11 @@ const metadata = {
     cards: publicSource(catalog.sources?.cards),
     rules: publicSource(catalog.sources?.rules)
   },
-  counts: { cards: numbered.length, chiefs: chiefs.length, tokens: tokens.length, images: images.size, automated: engine.SUPPORTED_IDS.length }
+  languages: ['fr', 'en'],
+  counts: { cards: numbered.length, chiefs: chiefs.length, tokens: tokens.length, images: images.size + englishImages.size, imagesPerLanguage: { fr: images.size, en: englishImages.size }, automated: engine.SUPPORTED_IDS.length }
 };
 const versionPath = path.join(dist, 'version.json');
 fs.writeFileSync(versionPath + '.tmp', JSON.stringify(metadata, null, 2) + '\n', 'utf8');
 fs.renameSync(versionPath + '.tmp', versionPath);
-process.stdout.write(`Site MH TCG ${packageJson.version} prêt : ${scripts.length} scripts vérifiés, 203 cartes, 7 Chefs et 205 images françaises.\n`);
+process.stdout.write(`Site MH TCG ${packageJson.version} prêt : ${scripts.length} scripts vérifiés, 203 cartes, 7 Chefs et 410 images françaises/anglaises.\n`);
 

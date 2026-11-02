@@ -48,7 +48,7 @@
   function searchFields(card) {
     const extension = extensionOf(card);
     return [card.id, card.name, card.nameEn, card.type, card.typeLabel,
-      ...(TYPE_NAMES[card.type] || []), ...textArray(card.subtypes), ...textArray(card.colors),
+      ...(TYPE_NAMES[card.type] || []), ...textArray(card.subtypes), ...textArray(card.subtypesEn), ...textArray(card.colors), ...textArray(card.colorsEn),
       extension, extension ? `${extension}-${card.id}` : '']
       .filter(value => value !== null && value !== undefined).map(normalize);
   }

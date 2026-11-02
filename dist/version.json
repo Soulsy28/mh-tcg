@@ -1,7 +1,7 @@
 {
   "app": "mh-tcg-guilde",
-  "version": "0.2.0",
-  "builtAt": "2026-11-02T16:50:40.616Z",
+  "version": "0.3.0",
+  "builtAt": "2026-11-02T18:08:53.962Z",
   "deployment": "static",
   "catalogVersion": "2026-11-01",
   "sources": {
@@ -12,11 +12,19 @@
       "title": "Règles du jeu"
     }
   },
+  "languages": [
+    "fr",
+    "en"
+  ],
   "counts": {
     "cards": 203,
     "chiefs": 7,
     "tokens": 2,
-    "images": 205,
+    "images": 410,
+    "imagesPerLanguage": {
+      "fr": 205,
+      "en": 205
+    },
     "automated": 37
   }
 }

@@ -1,12 +1,15 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.2 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.3 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+
+Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
 
 ## Ce que contient le site
 
 - Une création de profil avec pseudo et mot de passe, sans email.
 - Un deck builder pour les 203 cartes actuelles et les sept Chefs de chasse.
-- Une bibliothèque des cartes, des deux types de jetons et de leurs images finales françaises.
+- Une bibliothèque des cartes, des deux types de jetons et de leurs images finales françaises et anglaises.
+- Un bouton FR/EN avec drapeau en haut à droite : langue de l’interface et des cartes mémorisée dans le navigateur.
 - Des recherches par nom, type et sous-type, insensibles à la casse et aux accents.
 - Des filtres par extension, couleur, type et coût, ainsi que plusieurs tris.
 - Un mode test solo dans lequel une personne contrôle les deux camps.
@@ -15,6 +18,8 @@ Version 0.2 du site pour construire ses decks, tester le jeu seul et établir un
 - Une connexion directe WebRTC entre deux joueurs, établie par échange manuel de codes.
 
 ## Profils locaux et sauvegardes
+
+Le choix de langue est indépendant du profil et conservé dans le stockage local du navigateur (`mh-tcg.language`). Il s’applique dès l’ouverture du site, y compris avant connexion. Les 205 images par langue sont incluses. Changer de langue pendant une partie conserve la table et les sélections en cours ; chaque joueur peut choisir sa langue. Les noms de profils et de decks restent ceux saisis par leur créateur. Les sauvegardes et les actions réseau utilisent les mêmes identifiants de cartes dans les deux langues.
 
 Les profils existent uniquement dans ce navigateur, sur cet appareil et pour l'adresse du site utilisée. Ils ne créent pas de compte mondial et ne sont pas synchronisés entre appareils. Un même pseudo peut donc appartenir à des personnes différentes dans des navigateurs différents.
 
@@ -87,7 +92,7 @@ Les profils et les decks restent liés à cette adresse locale. Pour jouer à di
 - Les précisions du créateur sur la priorité Réflexe et l'Interposition unique.
 - Les illustrations finales fournies par le créateur, copiées et optimisées en WebP ; les originaux ne sont pas modifiés.
 
-Le dossier statique contient 203 cartes numérotées, sept Chefs compris, et deux images supplémentaires de jetons. Le fichier `dist/version.json`, produit par la préparation, conserve la version du catalogue et le nombre de cartes, sans lien vers les documents privés.
+Le dossier statique contient 203 cartes numérotées, sept Chefs compris, et deux types de jetons, avec 410 images au total : 205 françaises et 205 anglaises. Le fichier `dist/version.json`, produit par la préparation, conserve la version du catalogue et le nombre de cartes, sans lien vers les documents privés.
 
 ## Vérifier et préparer une version
 
@@ -98,4 +103,4 @@ node scripts/build.cjs
 
 Les tests couvrent les profils, le stockage, la recherche et la construction des decks, les tables de jeu et le protocole de connexion. Les essais réseau réels et entre navigateurs complètent les tests du protocole ; des tests seuls ne garantissent pas le passage de tous les routeurs.
 
-La préparation vérifie les scripts déclarés par la page et les 205 images, puis génère les métadonnées de version. Si un manifeste d'hébergement `.openai/hosting.json` est présent, il est copié dans `dist/.openai/hosting.json` après vérification qu'il ne contient pas d'identifiant secret. Aucun jeton, mot de passe ou fichier de profil utilisateur ne fait partie de la publication.
+La préparation vérifie les scripts déclarés par la page et les 410 images, puis génère les métadonnées de version. Si un manifeste d'hébergement `.openai/hosting.json` est présent, il est copié dans `dist/.openai/hosting.json` après vérification qu'il ne contient pas d'identifiant secret. Aucun jeton, mot de passe ou fichier de profil utilisateur ne fait partie de la publication.
