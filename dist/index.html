@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e31">
+  <meta name="description" content="Construisez vos decks Monster Hunter TCG, testez vos stratégies et rejoignez une chasse entre amis.">
+  <title>MH TCG — Guilde des chasseurs</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="game.css">
+  <link rel="stylesheet" href="site.css">
+  <script defer src="catalog.js"></script>
+  <script defer src="engine.js"></script>
+  <script defer src="table.js"></script>
+  <script defer src="profiles.js"></script>
+  <script defer src="deck-tools.js"></script>
+  <script defer src="peer.js"></script>
+  <script defer src="match.js"></script>
+  <script defer src="game-ui.js"></script>
+  <script defer src="site.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#accueil" aria-label="MH TCG, accueil"><span class="crest" aria-hidden="true">✦</span><span><strong>MONSTER HUNTER <b>TCG</b></strong><small>LA GUILDE DES CHASSEURS</small></span></a>
+    <nav id="navigation" aria-label="Navigation principale"><a href="#accueil" data-route="accueil">Accueil</a><a href="#decks" data-route="decks">Deck builder</a><a href="#cartes" data-route="cartes">Bibliothèque</a><a href="#jouer" data-route="jouer">Jouer <span class="nav-dot"></span></a></nav>
+    <div id="profile-control"><button class="button primary" data-do="account">Se connecter</button></div>
+  </header>
+  <main id="site"><div class="loading"><span class="crest">✦</span><h1>Bienvenue à la Guilde</h1><p>Préparation de la table…</p></div></main>
+  <footer class="site-footer"><span>MH TCG <b>·</b> Créé pour les chasseurs, par un chasseur.</span><span><button data-do="about">Règles & fonctionnement</button><b>·</b><span class="storage-dot"></span>Decks enregistrés dans ce navigateur</span></footer>
+  <dialog id="site-modal" aria-labelledby="site-modal-title"></dialog>
+  <div id="site-toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <input id="deck-upload" type="file" accept="application/json,.json" hidden>
+  <input id="game-upload" type="file" accept="application/json,.json" hidden>
+  <noscript>Active JavaScript pour accéder au deck builder et aux parties.</noscript>
+</body>
+</html>
