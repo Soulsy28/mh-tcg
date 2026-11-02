@@ -1,10 +1,12 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.5 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.5.1 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
 
 ## Ce que contient le site
+
+L’habillage de la Guilde emploie un fond parchemin cartographique, des panneaux clairs, des cadres bronze et des boutons bleu encre. Il s’inspire de références officielles Monster Hunter détaillées dans [docs/DIRECTION-ARTISTIQUE.md](docs/DIRECTION-ARTISTIQUE.md). La feuille `dist/theme.css` porte cet habillage ; les fonctions et l’organisation des écrans sont conservées. Les textures SVG sont originales et incluses dans les fichiers du site.
 
 - Une création de profil avec pseudo et mot de passe, sans email.
 - Un deck builder pour les cartes actuelles, avec onglets Cartes, Chefs de chasse et Analyse.

@@ -1,6 +1,8 @@
-# Vérification de la version 0.5
+# Vérification de la version 0.5.1
 
 Vérifications du 2 novembre 2026.
+
+Version 0.5.1 : habillage visuel ajouté dans une feuille séparée, textures SVG originales locales, boutons et panneaux harmonisés. Comparaison des fichiers : les douze modules JavaScript et les quatre feuilles de structure sont identiques à la version 0.5. Les 161 tests existants passent et la préparation vérifie aussi la présence des deux textures. L’accueil, la galerie des Chefs, la reprise d’une partie, les états de sélection et les libellés FR/EN ont été inspectés dans le navigateur. À 390 px, l’accueil et le builder ne débordent pas horizontalement ; la commande mobile du deck reste disponible. Les références officielles et les choix de contraste sont décrits dans `docs/DIRECTION-ARTISTIQUE.md`.
 
 Version 0.5 : pioche au clic sur le deck en table libre, début du premier tour et passage au tour suivant avec ration et pioche uniques, déplacement réel à la souris d’un Petit Monstre vers la chasse, engagement visuel de la ration correspondante et historique du paiement vérifiés dans le navigateur. L’aperçu montre l’image, le texte et les statistiques ; la bascule FR/EN conserve la partie et charge l’illustration traduite. Vérifications d’affichage à 1440 px et à 390 px : aucune largeur supplémentaire sur la page mobile, terrain défilant à l’intérieur du plateau et cartes conservant leur taille.
 

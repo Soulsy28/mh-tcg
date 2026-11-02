@@ -1,0 +1,224 @@
+/* Habillage de la Guilde : matières et couleurs seulement.
+   Les grilles, dimensions, zones, gestes et règles restent définis ailleurs. */
+:root{
+  --bg:#e8dfc7;--paper:#f3ead4;--ink:#282e2c;--muted:#655e50;
+  --green:#243c43;--green2:#36535a;--gold:#c3a264;--line:#c5b28d;
+  --shadow:0 8px 28px #30251916;
+  --guild-ink:#243c43;--guild-bronze:#80623a;--guild-gold:#d1b476;
+  --guild-paper:#f3ead4;--guild-soft:#e8dcc1;--guild-dark:#202c30;
+  --red:#913c2f;
+}
+body{
+  background-color:var(--bg);
+  background-image:url('assets/theme/grain.svg'),radial-gradient(ellipse at 45% 0,#fff8e59c,transparent 65%),url('assets/theme/cartography.svg');
+  background-size:160px 160px,100% 1100px,900px 700px;
+  background-repeat:repeat,no-repeat,repeat;
+  color:var(--ink);
+}
+::selection{background:#bfa06d;color:#202c30}
+.site-header{
+  background-color:var(--guild-dark);
+  background-image:url('assets/theme/grain.svg'),linear-gradient(110deg,#172629,#2d3839);
+  border-bottom-color:#a88952;
+  box-shadow:inset 0 -4px 0 #151f21,inset 0 -5px 0 #8f754747,0 5px 18px #201c141a;
+}
+.site-header .brand strong{color:#f6eedb}
+.site-header .brand b{color:#d5b778}
+.site-header .brand small{color:#c4b58f}
+.site-header .crest,.site-header .crest:after{color:#e6ce91;border-color:#c3a264}
+.site-header nav a{color:#d7d0bc}
+.site-header nav a:hover,.site-header nav a.active{color:#f2d89a}
+.site-header nav a.active:after{background:#d0b173}
+.profile-button{background:#304147;border-color:#8e7b55;color:#f2e8cc;border-radius:3px}
+.profile-avatar{background:#cbb37d;color:#26383b}
+.language-switch{background:#eddfc0;border-color:#c7ad71;color:#26383b;border-radius:3px;box-shadow:inset 0 0 0 2px #fff4d95c}
+.language-switch:hover{background:#fbebc9;border-color:#d9bd7a}
+.profile-menu{background:var(--paper);border-color:var(--line);border-radius:3px;box-shadow:var(--shadow)}
+.profile-menu button{color:var(--ink)}
+.profile-menu button:hover{background:#e6d6b4}
+.site-page-heading h1,.deck-builder-heading h1,.hero h1,
+.play-choice h2,.setup-panel h2,.peer-panel h2{font-family:Georgia,'Times New Roman',serif}
+.site-page-heading h1,.deck-builder-heading h1{color:#2a3738}
+.site-page-heading p,.kicker,.fine-print,.result-line,.peer-footer-note{color:var(--muted)}
+.hero{
+  background-color:#243b3f;
+  background-image:url('assets/theme/grain.svg'),linear-gradient(115deg,#182b2f,#2d4546);
+  color:#f6edd5;border-color:#a58a56;border-radius:3px;
+  box-shadow:inset 0 0 0 5px #192e31,inset 0 0 0 6px #c2a26466,0 10px 30px #2f291e26;
+}
+.hero:before{background:url('assets/theme/cartography.svg') center/cover no-repeat;pointer-events:none}
+.hero h1 em{color:#e0c78b}
+.hero p{color:#d5d6c5}
+.hero-badge{background:#0f222950;border-color:#bca16c80;color:#e5d4ac;border-radius:2px}
+.hero-art:after{border-color:#cab17738;color:#cab17710}
+.hero-art img{border-color:#c9ac6a;box-shadow:0 15px 25px #0d171b99}
+.hero-stat b{color:#e2ca8d}
+.hero-stat span{color:#d6d0b7}
+.button{
+  background:linear-gradient(#fcf6e7,#ede1c7);color:#2f4346;
+  border-color:#aa9163;border-radius:2px;box-shadow:inset 0 0 0 2px #fff9e970,0 2px 3px #3426150a;
+}
+.button:hover{background:linear-gradient(#fff8e6,#e5d3ac);border-color:#80623a}
+.button.primary{
+  background:linear-gradient(#334d53,#243a41);border-color:#a68a55;color:#f8efd8;
+  box-shadow:inset 0 0 0 2px #172b305c,inset 0 0 0 3px #d0b37640,0 2px 3px #1b29231a;
+}
+.button.primary:hover{background:linear-gradient(#415e64,#2e494f);border-color:#c7a86a}
+.button.gold,.hero-actions .button.primary{
+  background:linear-gradient(#dfc68e,#c5a365);border-color:#ead4a0;color:#253336;
+  box-shadow:inset 0 0 0 2px #614b2a38,inset 0 0 0 3px #fff0c950;
+}
+.button.gold:hover,.hero-actions .button.primary:hover{background:linear-gradient(#efd9a4,#d5b779);border-color:#f1dfb4}
+.button.quiet{background:#f3ead43d;color:#34494c;border-color:#ad9569;box-shadow:none}
+.button.quiet:hover{background:#e7d9ba}
+.hero-actions .button.quiet{color:#f2e6c8;background:#0c232634;border-color:#c1a46d8c;border-radius:2px}
+.hero-actions .button.quiet:hover{background:#53605770;border-color:#d0b477}
+.text-button,.builder-clear-filters{color:#455d60;text-decoration-color:#9d8050}
+.icon-button,.tiny-button{border-color:#b4a07b;color:#485950;background:#f1e6ce;border-radius:2px}
+.icon-button:hover,.tiny-button:hover{background:#e4d3b0}
+.quick-card,.play-choice,.setup-panel,.peer-panel,.gate-panel,.starter-panel,.empty-state,
+.builder-deck-controls,.builder-filters,.chief-choice,.deck-panel,.guest-line{
+  background-color:var(--paper);background-image:url('assets/theme/grain.svg');
+  border-color:#baa27a;border-radius:3px;
+  box-shadow:inset 0 0 0 3px #fff9e74d,0 3px 12px #33281708;
+}
+.quick-card:hover{background-color:#f8efd9;border-color:#95774c;box-shadow:inset 0 0 0 3px #fff9e780,0 5px 16px #33281718}
+.quick-card h2,.play-choice h2,.setup-panel h2,.peer-panel h2{color:#2f4346}
+.quick-card p,.play-choice p,.setup-panel>p,.peer-panel>p{color:#655e50}
+.guest-line h3{color:#2f4346}
+.guest-line p{color:#655e50}
+.quick-card .arrow{color:#80623a}
+.quick-icon{background:#e9dcc0;color:#5d604b;border-color:#c3af83;border-radius:2px}
+.play-choice.peer-choice{background-color:#e8ddc4}
+.play-choice .feature-label,.extension-pill{background:#e9ddc0;border-color:#c3ac7b;color:#65553a;border-radius:2px}
+.mode-tabs,.mode-switch{background:#e3d7bd;border-color:#b7a17b}
+.mode-option{border-color:#bdab87;background:#f7eed9;color:#354a4d;border-radius:3px}
+.mode-option.selected,.mode-option.active{background:#e1d3b2;border-color:#877044;color:#243c43}
+.mode-option b{color:inherit}
+.danger-quiet{color:#913c2f!important}
+.form-error,.network-status.error{color:#913c2f}
+.badge-valid{color:#3b5935}
+.badge-draft{color:#76511f}
+input:not([type='checkbox']):not([type='radio']),select,textarea{background-color:#fbf3e2;border-color:#b7a17a;color:#303d3c;border-radius:3px}
+.field>span,.field>label,.site-search,.filter-check{color:#635d50}
+.site-search input,.field input,.field textarea,.field select{background-color:#fbf3e2;border-color:#b7a17a;color:#303d3c}
+input::placeholder,textarea::placeholder{color:#776e5c}
+.turn-fields{background:#ede2c9;border-color:#bfa982;border-radius:3px}
+.turn-fields summary,.network-options{color:#635d50}
+.peer-code{background:#f9f1de;border-color:#b7a17a;color:#34494c}
+.peer-active-slot{background:#e5dac0;border-color:#ad966d;color:#475c58;border-radius:3px}
+.card-tile h3,.card-tile .card-name{color:#304548}
+.card-tile p,.small-empty{color:#655e50}
+.card-image-button{background:transparent}
+.library-toolbar,.filters-row{border-color:#c9b58c}
+.color-button{border-color:#c5b38d;border-radius:3px}
+.color-button.active,.deck-builder .color-button.active{border-color:#8b7042;background:#dfcfaa}
+.tile-tag{background:#e9dec4;color:#5d594a;border-color:#bda77b;border-radius:2px}
+.site-footer{border-top-color:#b9a37c;color:#635e50}
+.site-footer button{color:#455d60}
+.site-footer b{color:#8f7955}
+dialog,.mh-dialog,.mh-game-dialog,#site-modal{background-color:#f4ebd6;background-image:url('assets/theme/grain.svg');border-color:#9d8252;border-radius:4px;color:#2d3835;box-shadow:0 14px 65px #0e171780,inset 0 0 0 3px #fff8e373}
+dialog::backdrop{background:#13252dcc}
+.modal-heading,.modal-footer,.modal-tabs{border-color:#c2ab80}
+.modal-heading h2{color:#2f4346}
+.modal-body>p,.effect-text{color:#554f43}
+.modal-tabs button{color:#655e50}
+.modal-tabs button.active{color:#243c43;border-color:#8d7040;background:#e5d5b1}
+.choice-list button,.target-card{background-color:#fbf4e4;border-color:#bda77c;color:#34494c;border-radius:3px}
+.choice-list button:hover,.target-card:hover,.target-card.chosen{background-color:#e6d5ae;border-color:#947441}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,
+.deck-builder button:focus-visible,.deck-builder input:focus-visible,.deck-builder select:focus-visible,.deck-builder summary:focus-visible{outline-color:#376c79}
+.site-header :focus-visible,.hero :focus-visible,.game-mount .board :focus-visible{outline-color:#f1ce7e}
+.deck-builder{--builder-text:#303e3c;--builder-muted:#655e50;--builder-border:#beaa83;--builder-soft:#e7d9b9}
+.builder-tabs{background:#dfd1b2;border-color:#b49b71;border-radius:3px;box-shadow:inset 0 0 0 2px #fff8df40}
+.builder-tab{color:#5b5b4c;border-radius:2px}
+.builder-tab:hover{background:#f1e4c8;color:#2d464b}
+.builder-tab.active,.builder-tab[aria-selected='true']{background:linear-gradient(#354e53,#263d43);border-color:#b29961;color:#faefd5;box-shadow:inset 0 0 0 2px #d3b97f25}
+.builder-deck-controls #deck-name,.builder-search-row input[type='search'],.builder-search-row select,.builder-advanced-filters select{background:#fbf3e2;color:#303e3c;border-color:#baa47d;border-radius:3px}
+.builder-advanced-filters{border-top-color:#c4af87}
+.builder-advanced-filters>summary,.deck-builder .filter-check{color:#5d5b4a}
+.filter-chip{background:#e6d7b6;border-color:#b7a076;color:#4a5246;border-radius:3px}
+.filter-chip:hover{background:#dcc99f;border-color:#8f754a}
+.builder-card-grid .card-tile h3,.chief-choice-body h3,.deck-panel-heading h2{color:#2c4449}
+.builder-card-grid .card-tile p,.chief-colors,.chief-effect{color:#655e50}
+.chief-choice.selected{background-color:#e8d8b5;border-color:#8b7144;box-shadow:0 0 0 2px #c5ac77}
+.chief-choice .chief-current-tag{color:#594f32}
+.builder-tile-controls{background:#ede2c8;border-color:#baa47c;border-radius:3px}
+.builder-tile-controls button,.builder-pagination button{background:linear-gradient(#faf0d9,#e7d8b7);border-color:#b7a078;color:#33494b;border-radius:2px}
+.builder-tile-controls button:hover:not(:disabled),.builder-pagination button:hover:not(:disabled){background:#ddcba2;border-color:#927343}
+.builder-tile-controls>span,.builder-tile-controls>output,.builder-pagination{color:#535b4e}
+.deck-panel-heading>strong,.deck-panel-heading .deck-total{color:#30484c}
+.deck-panel-heading>span,.deck-panel-heading small{color:#655e50}
+.deck-panel-footer{background:#e6d8b9;border-color:#c3ac7f}
+.deck-panel-footer p{color:#5b5c4a}
+.builder-mobile-summary{background:linear-gradient(#344c50,#263b40);border-color:#bea069;color:#f9edce;box-shadow:0 -4px 16px #16272a38}
+.builder-mobile-summary strong,.builder-mobile-summary span{color:inherit}
+.builder-analysis,.analysis-card,.deck-stat{border-color:#c4ae84;background-color:#f4ead3}
+.game-mount .board{background:#243335;border-color:#9d8252;box-shadow:0 7px 30px #18252232,inset 0 0 0 2px #b0945d40}
+.game-mount .board-meta,.game-mount .phase-track{background:#1d2e33;color:#d9d4bd;border-color:#b4995e55}
+.game-mount .board-meta strong{color:#f0dba2}
+.game-mount .phase-step{color:#c0c4b8}
+.game-mount .phase-step b{border-color:#a9a58b80;color:#ddd4b7}
+.game-mount .phase-step.current{background:#d0af6626;color:#fff0be}
+.game-mount .phase-step.current b{background:#d4b471;border-color:#d4b471;color:#1f3034}
+.game-mount .phase-step.completed b{color:#d3cfad;border-color:#b9b39480}
+.game-mount .board-scroll{background-image:url('assets/theme/grain.svg');background-color:#2d3b38;scrollbar-color:#b9a06c #253332}
+.game-mount .player-zone{background:#2c3938ed}
+.game-mount .player-zone.active-zone{background:#394a43ed}
+.game-mount .player-heading{color:#f1e8ca}
+.game-mount .avatar{color:#ead5a4;border-color:#c1a15e70;background:#b9a16c19}
+.game-mount .player-name em{color:#ecd398;background:#b49a4f20}
+.game-mount .score{color:#f2dfaa}
+.game-mount .score span,.game-mount .zone-caption{color:#c2c8b1}
+.game-mount .empty-slot{border-color:#bfa7794f;color:#d3c28c44}
+.game-mount .arena{background-color:#494835e8;background-image:url('assets/theme/grain.svg');border-color:#bba36a4f}
+.game-mount .arena-heading{color:#e3d2a2}
+.game-mount .arena-heading:after{background:#cbb57940}
+.game-mount .arena-empty{color:#d9d2b9}
+.game-mount .arena-empty small{color:#c6c9b2}
+.game-mount .arena-symbol{color:#cab77c80}
+.game-mount .hand-panel{background:#1a3034}
+.game-mount .hand-heading,.game-mount .hand-drag-hint{color:#d1d7c5}
+.game-mount .hand-heading select{background:#334b4e;color:#f2e8c9;border-color:#b8a16b66}
+.game-mount .hand-empty{color:#bdc7b3}
+.game-mount .hand-panel .tiny-button,.game-mount .deck-info-button{background:#ffffff0a;color:#dfd5b5;border-color:#c2ad7660}
+.game-mount .stack-button{color:#ddd5b9}
+.game-mount .card-back{background:repeating-linear-gradient(45deg,#294044 0,#294044 3px,#32494a 3px,#32494a 5px);border-color:#b9a16a;color:#e2cc8b;box-shadow:3px 3px 0 #172a2c,5px 5px 0 #958150}
+.game-mount .discard-stack{background:#37413a;border-color:#969675}
+.game-mount .ration-zone{border-top-color:#c3ab7038}
+.game-mount .ration-heading,.game-mount .ration-reserve{color:#e0d5b5}
+.game-mount .ration-heading strong{color:#f1dfaa}
+.game-mount .card-stats{background:#192f32f2;color:#faedc8;border-color:#b6a56b80}
+.game-mount .card-tap-label{background:#192b30eb;color:#f6e4b5}
+.game-mount .owner-pip{background:#223b3e;color:#ead7a6;border-color:#a38a55}
+.game-mount .side-panel{background-color:#f3ead4;background-image:url('assets/theme/grain.svg');border-color:#baa27a;border-radius:3px;box-shadow:inset 0 0 0 3px #fff9e759}
+.game-mount .inspector-panel{background-color:#f8efdc;border-color:#a88b54}
+.game-mount .inspector-placeholder{background:#ede1c75c;border-color:#bca77c;color:#686550;border-radius:2px}
+.game-mount .inspector-placeholder strong,.game-mount .inspector-name{color:#2e484b}
+.game-mount .inspector-meta{color:#6a624f}
+.game-mount .inspector-effect{color:#343c33}
+.game-mount .actor-label{color:#314a4b}
+.game-mount .panel-title{color:#2d403e}
+.game-mount .panel-title small,.game-mount .action-description,.game-mount .empty-note,.game-mount .tips{color:#655e50}
+.game-mount .board .empty-note{color:#c8c9ae}
+.game-mount .phase-pill{background:#dfcfaa;color:#594f34;border-radius:2px}
+.game-mount .action-button{background:linear-gradient(#faf1dd,#e9ddbf);border-color:#c1aa7b;color:#354b49;border-radius:2px}
+.game-mount .action-button:hover{background:#e4d2aa;border-color:#95794a}
+.game-mount .action-button.primary{background:linear-gradient(#344d52,#263d42);border-color:#a48955;color:#f7edcf;box-shadow:inset 0 0 0 2px #d2b77924}
+.game-mount .action-button.primary:hover{background:linear-gradient(#425e63,#315057)}
+.game-mount .selection-title,.game-mount .table-tools{border-color:#bfaa7f}
+.game-mount .table-tools summary{color:#4a5b51}
+.game-mount .stack-entry{background:#e8dcc0;border-color:#a88b51;color:#4e5546}
+.game-mount .history-entry{color:#5f5b4b}
+.game-mount .history-entry span{color:#776b50}
+.game-mount .history-entry:first-child{color:#304a45}
+.game-mount .tips strong{color:#4c5c4f}
+.game-mount .play-dropzone{color:#e3d2a1;border-color:#ccb27675;background:#b9a5650b}
+.game-mount .drop-hint{color:#f5dca0}
+.game-mount .drop-ready{outline-color:#dbbc76;background-color:#d5b26317}
+.game-mount .drop-active{outline-color:#f5d68a;background-color:#e0be7033;box-shadow:inset 0 0 30px #ddc47f22}
+.play-workspace .manual-notice{background:#e6d8b5;color:#625439;border-color:#baa374;border-radius:2px}
+.play-workspace .match-top{color:#5c6251}
+@media(forced-colors:active){
+  .site-header,.hero,.button,.builder-tab,.game-mount .action-button{background-image:none;box-shadow:none}
+}

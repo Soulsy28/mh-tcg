@@ -37,6 +37,8 @@ for (const source of scripts) {
 for (const match of html.matchAll(/<link\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi)) staticFile(match[1], 'Une ressource déclarée');
 // Les rations sont des éléments du plateau, séparés du catalogue des decks.
 staticFile('assets/game/ration.webp', 'L’illustration des rations');
+staticFile('assets/theme/cartography.svg', 'Le fond cartographique');
+staticFile('assets/theme/grain.svg', 'La texture des panneaux');
 
 const catalog = require(path.join(dist, 'catalog.js'));
 const engine = require(path.join(dist, 'engine.js'));
