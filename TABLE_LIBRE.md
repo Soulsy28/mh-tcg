@@ -8,7 +8,7 @@ L'état comporte `mode: "manual"`, `engine: "MHTable"` et une notice explicite. 
 
 ## Début et tour
 
-La partie débute par les deux décisions de mulligan. Elle entre ensuite dans `phase: "start"`. Les joueurs peuvent résoudre manuellement leurs capacités de début de tour, puis utiliser `continue` pour recevoir une ration et piocher une carte. Les Chasseurs, Monstres, objets et rations se dégagent au début de leur tour ; Surmenage manuel saute le prochain dégagement de la carte.
+La partie débute par les deux décisions de mulligan. Le début de tour dégage les cartes du joueur, ajoute une ration depuis sa réserve et pioche une carte automatiquement, une seule fois. Surmenage manuel saute le prochain dégagement de la carte. Si une carte publique du joueur possède une capacité de début de tour à résoudre manuellement, la table reste en `phase: "start"` avant la ration et la pioche ; le joueur la résout puis utilise `continue`. Ce délai permet notamment de vérifier une victoire de début de tour avant une éventuelle défaite à la pioche. Une ancienne sauvegarde en phase `start` reprend aussi par cette action canonique.
 
 Les actions normales s'appliquent au joueur de `priorityPlayer`. Le bouton `pass` donne la main à l'autre joueur et permet de répondre. La fin du tour n'est proposée qu'au joueur actif ayant la priorité.
 
@@ -34,4 +34,4 @@ En ligne, l'hôte conserve l'état complet et doit filtrer les vues et actions r
 
 ## Vérification
 
-Exécuter `node --test tests/table.test.cjs`. Les 13 tests couvrent la validation de tout le catalogue, les identifiants canoniques, le mulligan, les étapes du tour, conservation des rations, limites de Camp, arrivée des types de carte, combat simultané, Interposition unique, interruption, outils manuels, jetons, victoire et sérialisation.
+Exécuter `npm test`. Les tests de table et d’automatisation des tours couvrent la validation de tout le catalogue, les identifiants canoniques, le mulligan, les étapes du tour, l’absence de double ration/pioche, les effets de début de tour, la conservation des rations, les limites de Camp, l’arrivée des cartes, le combat simultané, l’Interposition unique, les interruptions, les outils manuels, les jetons, la victoire et la sérialisation.

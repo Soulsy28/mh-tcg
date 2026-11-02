@@ -1,0 +1,30 @@
+{
+  "app": "mh-tcg-guilde",
+  "version": "0.5.0",
+  "builtAt": "2026-11-02T20:40:23.653Z",
+  "deployment": "static",
+  "catalogVersion": "2026-11-01",
+  "sources": {
+    "cards": {
+      "title": "Catalogue des cartes"
+    },
+    "rules": {
+      "title": "Règles du jeu"
+    }
+  },
+  "languages": [
+    "fr",
+    "en"
+  ],
+  "counts": {
+    "cards": 203,
+    "chiefs": 7,
+    "tokens": 2,
+    "images": 410,
+    "imagesPerLanguage": {
+      "fr": 205,
+      "en": 205
+    },
+    "automated": 37
+  }
+}

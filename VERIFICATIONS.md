@@ -1,6 +1,12 @@
-# Vérification de la version 0.4
+# Vérification de la version 0.5
 
 Vérifications du 2 novembre 2026.
+
+Version 0.5 : pioche au clic sur le deck en table libre, début du premier tour et passage au tour suivant avec ration et pioche uniques, déplacement réel à la souris d’un Petit Monstre vers la chasse, engagement visuel de la ration correspondante et historique du paiement vérifiés dans le navigateur. L’aperçu montre l’image, le texte et les statistiques ; la bascule FR/EN conserve la partie et charge l’illustration traduite. Vérifications d’affichage à 1440 px et à 390 px : aucune largeur supplémentaire sur la page mobile, terrain défilant à l’intérieur du plateau et cartes conservant leur taille.
+
+Les nouveaux tests couvrent les gestes souris et tactiles, les mauvaises zones, les coûts insuffisants, les cibles de remplacement, les annulations, les mises à jour distantes, les sauvegardes anciennes, les effets prioritaires de début de tour, la conservation des douze rations et les événements publics en ligne. Le clic sur un deck ne crée aucune pioche libre dans le moteur automatisé. La liaison sur Internet entre deux réseaux distincts n’a pas été retestée pour cette version ; les contrôles d’autorité, de révision et de confidentialité passent dans les tests de protocole.
+
+161 tests automatisés passent pour cette version, y compris le défilement pendant un déplacement et l’arrêt de toutes ses animations lors d’une annulation. La préparation finale du site réussit avec les 410 images de cartes et la nouvelle image de ration, sans modifier le catalogue des decks.
 
 Version 0.4 : galerie des Chefs, recherche/couleurs/extensions, création sans Chef imposé, bilan des incompatibilités, conservation ou retrait explicite, annuler/rétablir, quantités +/−, limites à 50 cartes et 3 exemplaires, gestion/recherche des decks et reprise du dernier deck vérifiés dans le navigateur. Interface FR/EN et recherche conservée après changement de langue. Navigation clavier des onglets et affichage de 390 px sans débordement horizontal vérifiés ; le bouton mobile place le focus sur le deck. Le modèle et le rendu de galerie ont été éprouvés avec 1 000 Chefs synthétiques, avec seulement 12 fiches affichées par page. Une préparation isolée accepte un Chef supplémentaire avec ses deux images, refuse les images absentes et les identifiants en double, et renouvelle les adresses des ressources modifiées.
 

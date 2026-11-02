@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e31">
+  <meta name="description" content="Construisez vos decks Monster Hunter TCG, testez vos stratégies et rejoignez une chasse entre amis.">
+  <title>MH TCG — Guilde des chasseurs</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=b1e489a9a4bd">
+  <link rel="stylesheet" href="game.css?v=b8aebf261aea">
+  <link rel="stylesheet" href="site.css?v=fd9a748ac392">
+  <script defer src="catalog.js?v=3ccd47ef0700"></script>
+  <script defer src="i18n.js?v=3ba70e6f5c1f"></script>
+  <script defer src="engine.js?v=4704069722a6"></script>
+  <script defer src="table.js?v=e230a85eca81"></script>
+  <script defer src="profiles.js?v=90dab51fb9df"></script>
+  <script defer src="deck-tools.js?v=932e1dfadf13"></script>
+  <script defer src="builder-tools.js?v=695d444b183a"></script>
+  <script defer src="builder-view.js?v=fdd186ad1167"></script>
+  <script defer src="peer.js?v=454174da5529"></script>
+  <script defer src="match.js?v=503ac4d865ae"></script>
+  <script defer src="game-ui.js?v=cf97bb305013"></script>
+  <script defer src="site.js?v=4108882f1d39"></script>
+  <link rel="stylesheet" href="builder.css?v=bb8fb7fda7ed">
+  <link rel="stylesheet" href="play.css?v=90077b0d5d2c">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#accueil" aria-label="MH TCG, accueil"><span class="crest" aria-hidden="true">✦</span><span><strong>MONSTER HUNTER <b>TCG</b></strong><small>LA GUILDE DES CHASSEURS</small></span></a>
+    <nav id="navigation" aria-label="Navigation principale"><a href="#accueil" data-route="accueil">Accueil</a><a href="#decks" data-route="decks">Deck builder</a><a href="#cartes" data-route="cartes">Bibliothèque</a><a href="#jouer" data-route="jouer">Jouer <span class="nav-dot"></span></a></nav>
+    <div class="header-actions">
+      <div id="profile-control"><button class="button primary" data-do="account">Se connecter</button></div>
+      <button id="language-switch" class="language-switch" type="button" data-no-i18n aria-label="Langue actuelle : français. Passer en anglais." title="Passer en anglais"><span class="language-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><path fill="#002395" d="M0 0h20v40H0z"/><path fill="#fff" d="M20 0h20v40H20z"/><path fill="#ed2939" d="M40 0h20v40H40z"/></svg></span><span>FR</span></button>
+    </div>
+  </header>
+  <main id="site"><div class="loading"><span class="crest">✦</span><h1>Bienvenue à la Guilde</h1><p>Préparation de la table…</p></div></main>
+  <footer class="site-footer"><span>MH TCG <b>·</b> Créé pour les chasseurs, par un chasseur.</span><span><button data-do="about">Règles & fonctionnement</button><b>·</b><span class="storage-dot"></span>Decks enregistrés dans ce navigateur</span></footer>
+  <dialog id="site-modal" aria-labelledby="site-modal-title"></dialog>
+  <div id="site-toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <input id="deck-upload" type="file" accept="application/json,.json" hidden>
+  <input id="game-upload" type="file" accept="application/json,.json" hidden>
+  <noscript>Active JavaScript pour accéder au deck builder et aux parties.</noscript>
+</body>
+</html>

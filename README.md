@@ -1,6 +1,6 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.4 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.5 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
 
@@ -54,6 +54,8 @@ L’onglet Analyse affiche les quantités, le coût moyen, la courbe des coûts 
 L’étude et ses références sont disponibles dans [docs/ANALYSE-DECKBUILDER.md](docs/ANALYSE-DECKBUILDER.md).
 
 ## Tester le jeu seul
+
+La table agrandie affiche les étapes du tour, des rations sous forme de cartes et un aperçu au survol, au focus ou au clic. Glisser une carte jouable depuis la main vers sa zone utilise la même action et le même paiement que les boutons. Les cibles nécessaires sont demandées avant validation. Le carnet de chasse détaille les pioches, rations et paiements sans annoncer les cartes piochées. Voir [docs/INTERFACE-JEU.md](docs/INTERFACE-JEU.md) pour les commandes et leurs limites.
 
 Le mode test est une table d'entraînement : tu choisis les actions des deux camps. Il ne s'agit pas encore d'un adversaire informatique qui choisit sa propre stratégie.
 

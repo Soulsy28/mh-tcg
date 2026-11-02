@@ -1,10 +1,10 @@
 # Mettre MH TCG sur GitHub et tester le site en ligne
 
-Le dossier livré contient tout le code du site, les 410 images françaises et anglaises, les tests et la publication automatique sur GitHub Pages. Il ne nécessite aucun serveur de comptes ou de jeu. Les fichiers HTML, CSS et JavaScript de `dist/` sont les sources modifiables du site ; il n'y a pas de compilation cachée ni de service payant à installer.
+Le dossier livré contient tout le code du site, les 410 images de cartes françaises et anglaises, l’illustration des rations, les tests et la publication automatique sur GitHub Pages. Il ne nécessite aucun serveur de comptes ou de jeu. Les fichiers HTML, CSS et JavaScript de `dist/` sont les sources modifiables du site ; il n'y a pas de compilation cachée ni de service payant à installer.
 
 ## 1. Préparer le dossier
 
-Extraire l'archive `MH-TCG-code-GitHub-v0.4.zip` dans un dossier de ton choix. Ouvrir le dossier `MH-TCG-GitHub` extrait : tu dois y voir directement `README.md`, `package.json`, `dist`, `scripts`, `tests` et `.github`.
+Extraire l'archive `MH-TCG-code-GitHub-v0.5.zip` dans un dossier de ton choix. Ouvrir le dossier `MH-TCG-GitHub` extrait : tu dois y voir directement `README.md`, `package.json`, `dist`, `scripts`, `tests` et `.github`.
 
 Le dossier `.github` contient la publication automatique. Ne pas l'oublier lors de l'envoi à GitHub. Il faut envoyer les fichiers extraits, pas le ZIP lui-même.
 
