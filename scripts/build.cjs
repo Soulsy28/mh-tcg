@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
 
 const root = path.resolve(__dirname, '..');
 const dist = path.join(root, 'dist');
@@ -64,6 +65,20 @@ for (const card of catalog.cards) {
 }
 const englishImageFiles = fs.readdirSync(path.join(imageDirectory, 'en')).filter(name => /\.webp$/i.test(name));
 if (englishImages.size !== 205 || englishImageFiles.length !== 205) throw new Error('Les 205 images anglaises finales doivent être présentes.');
+
+// Une page récente doit charger ses propres scripts et styles, même si une
+// ancienne version de ces fichiers est encore conservée par le navigateur.
+const versionedHtml = html.replace(/(<(?:script|link)\b[^>]*\b(?:src|href)=["'])([^"']+)(["'])/gi, (match, before, relative, after) => {
+  const file = staticFile(relative, 'Une ressource à versionner');
+  const hash = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 12);
+  const [address, fragment] = relative.split('#', 2);
+  const separator = address.indexOf('?');
+  const basename = separator === -1 ? address : address.slice(0, separator);
+  const query = new URLSearchParams(separator === -1 ? '' : address.slice(separator + 1));
+  query.set('v', hash);
+  return before + basename + '?' + query.toString() + (fragment === undefined ? '' : '#' + fragment) + after;
+});
+if (versionedHtml !== html) fs.writeFileSync(htmlPath, versionedHtml, 'utf8');
 
 const hostingPath = path.join(root, '.openai', 'hosting.json');
 if (fs.existsSync(hostingPath)) {
