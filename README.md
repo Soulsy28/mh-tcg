@@ -2,8 +2,6 @@
 
 Version 0.2 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
-Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
-
 ## Ce que contient le site
 
 - Une création de profil avec pseudo et mot de passe, sans email.
