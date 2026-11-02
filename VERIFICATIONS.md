@@ -1,8 +1,10 @@
-# Vérification de la version 0.3
+# Vérification de la version 0.4
 
 Vérifications du 2 novembre 2026.
 
-106 tests automatisés réussissent : règles de base et cartes du sous-ensemble automatisé, parties complètes, table libre, profils locaux et séparation des sauvegardes, recherche et validation des decks, protocole P2P, droits des joueurs, masquage des cartes cachées et langue de présentation.
+Version 0.4 : galerie des Chefs, recherche/couleurs/extensions, création sans Chef imposé, bilan des incompatibilités, conservation ou retrait explicite, annuler/rétablir, quantités +/−, limites à 50 cartes et 3 exemplaires, gestion/recherche des decks et reprise du dernier deck vérifiés dans le navigateur. Interface FR/EN et recherche conservée après changement de langue. Navigation clavier des onglets et affichage de 390 px sans débordement horizontal vérifiés ; le bouton mobile place le focus sur le deck. Le modèle et le rendu de galerie ont été éprouvés avec 1 000 Chefs synthétiques, avec seulement 12 fiches affichées par page. Une préparation isolée accepte un Chef supplémentaire avec ses deux images, refuse les images absentes et les identifiants en double, et renouvelle les adresses des ressources modifiées.
+
+126 tests automatisés réussissent : règles de base et cartes du sous-ensemble automatisé, parties complètes, table libre, profils locaux et séparation des sauvegardes, recherche et validation des decks, protocole P2P, droits des joueurs, masquage des cartes cachées et langue de présentation.
 
 La version 0.3 a été vérifiée dans le navigateur : passage FR/EN et retour, langue conservée après rechargement, chargement des illustrations anglaises, recherche « elder dragon » renvoyant les six cartes attendues, détails anglais d’une carte, conservation des noms personnels de profil et de deck (« Accueil » reste « Accueil »), début d’une partie automatisée et conservation de la même carte sélectionnée lors d’un changement de langue. Les 205 illustrations anglaises ont été décodées et vérifiées, en plus des 205 françaises. Les textes de règles anglais viennent du catalogue validé ; certains messages avancés du moteur sans traduction dédiée restent en français.
 

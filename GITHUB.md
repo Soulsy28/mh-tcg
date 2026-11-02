@@ -4,7 +4,7 @@ Le dossier livré contient tout le code du site, les 410 images françaises et a
 
 ## 1. Préparer le dossier
 
-Extraire l'archive `MH-TCG-code-GitHub-v0.3.zip` dans un dossier de ton choix. Ouvrir le dossier `MH-TCG-GitHub` extrait : tu dois y voir directement `README.md`, `package.json`, `dist`, `scripts`, `tests` et `.github`.
+Extraire l'archive `MH-TCG-code-GitHub-v0.4.zip` dans un dossier de ton choix. Ouvrir le dossier `MH-TCG-GitHub` extrait : tu dois y voir directement `README.md`, `package.json`, `dist`, `scripts`, `tests` et `.github`.
 
 Le dossier `.github` contient la publication automatique. Ne pas l'oublier lors de l'envoi à GitHub. Il faut envoyer les fichiers extraits, pas le ZIP lui-même.
 

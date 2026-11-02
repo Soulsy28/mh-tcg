@@ -42,9 +42,7 @@ if (!Array.isArray(catalog.cards)) throw new Error('Le catalogue du site est inv
 const numbered = catalog.cards.filter(card => card.type !== 'token');
 const tokens = catalog.cards.filter(card => card.type === 'token');
 const chiefs = catalog.cards.filter(card => card.type === 'chief');
-if (numbered.length !== 203 || tokens.length !== 2 || chiefs.length !== 7) {
-  throw new Error('Le catalogue attendu doit contenir 203 cartes, 7 Chefs et 2 types de jetons supplémentaires.');
-}
+if (!numbered.length || !chiefs.length) throw new Error('Le catalogue doit contenir des cartes et au moins un Chef de chasse.');
 const identities = new Set(catalog.cards.map(card => card.id));
 if (identities.size !== catalog.cards.length) throw new Error('Le catalogue contient des identifiants en double.');
 const images = new Set();
@@ -55,7 +53,7 @@ for (const card of catalog.cards) {
 }
 const imageDirectory = path.join(dist, 'assets', 'cards');
 const imageFiles = fs.readdirSync(imageDirectory).filter(name => /\.webp$/i.test(name));
-if (images.size !== 205 || imageFiles.length !== 205) throw new Error('Les 205 images françaises finales doivent être présentes.');
+if (images.size !== catalog.cards.length || imageFiles.length !== catalog.cards.length) throw new Error('Chaque carte et jeton du catalogue doit avoir une image française unique.');
 
 const englishImages = new Set();
 for (const card of catalog.cards) {
@@ -64,7 +62,7 @@ for (const card of catalog.cards) {
   englishImages.add(englishImage);
 }
 const englishImageFiles = fs.readdirSync(path.join(imageDirectory, 'en')).filter(name => /\.webp$/i.test(name));
-if (englishImages.size !== 205 || englishImageFiles.length !== 205) throw new Error('Les 205 images anglaises finales doivent être présentes.');
+if (englishImages.size !== catalog.cards.length || englishImageFiles.length !== catalog.cards.length) throw new Error('Chaque carte et jeton du catalogue doit avoir une image anglaise unique.');
 
 // Une page récente doit charger ses propres scripts et styles, même si une
 // ancienne version de ces fichiers est encore conservée par le navigateur.
@@ -121,5 +119,5 @@ const metadata = {
 const versionPath = path.join(dist, 'version.json');
 fs.writeFileSync(versionPath + '.tmp', JSON.stringify(metadata, null, 2) + '\n', 'utf8');
 fs.renameSync(versionPath + '.tmp', versionPath);
-process.stdout.write(`Site MH TCG ${packageJson.version} prêt : ${scripts.length} scripts vérifiés, 203 cartes, 7 Chefs et 410 images françaises/anglaises.\n`);
+process.stdout.write(`Site MH TCG ${packageJson.version} prêt : ${scripts.length} scripts vérifiés, ${numbered.length} cartes, ${chiefs.length} Chefs et ${images.size + englishImages.size} images françaises/anglaises.\n`);
 

@@ -429,9 +429,30 @@ Une ration est ajoutée et une carte est piochée.|One ration is added and one c
 Le combat est interrompu : un participant a quitté le terrain.|Combat is interrupted: a participant has left the field.
 Interposition terminée. Appliquez les capacités et ajustements avant les blessures de base.|Interposition completed. Apply abilities and adjustments before basic damage.
 Combat terminé. Résolvez les capacités de fin de combat manuellement.|Combat ended. Resolve end-of-combat abilities manually.
+Choisis un Chef pour créer ton deck|Choose a Chief to create your deck
+Chef modifié. Les cartes incompatibles ont été retirées.|Chief changed. Incompatible cards have been removed.
+Chef de chasse sélectionné.|Hunting Chief selected.
+Modification annulée.|Change undone.
+Modification rétablie.|Change redone.
+Mes decks|My decks
+Rechercher un deck|Search decks
+Rechercher dans mes decks|Search my decks
+Nom du deck ou du Chef|Deck or Chief name
+Nom du deck ou du Chef…|Deck or Chief name…
+Choisis un Chef de chasse valide.|Choose a valid Hunting Chief.
+Choisis un Chef de chasse valide, séparé des 50 cartes du deck.|Choose a valid Hunting Chief, separate from the 50-card deck.
+La liste de cartes du deck est invalide.|The deck's card list is invalid.
+Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automatisés. Il reste utilisable en mode manuel.|This deck contains a Chief or cards whose effects are not automated yet. It can still be played in manual mode.
 `.trim().split('\n').map(line => { const split=line.indexOf('|'); return [line.slice(0,split),line.slice(split+1)]; }));
 
   const patterns = [
+    [/^Sauvegarde impossible : (.+)$/, reason=>`Unable to save: ${translate(reason)}`],
+    [/^Le deck principal doit contenir exactement 50 cartes \((\d+) actuellement\)\.$/, count=>`The main deck must contain exactly 50 cards (${count} currently).`],
+    [/^Maximum 3 exemplaires de (.+) \((\d+) actuellement\)\.$/, (name,count)=>`Up to 3 copies of ${name} (${count} currently).`],
+    [/^Carte inconnue : (.+)\.$/, id=>`Unknown card: ${id}.`],
+    [/^(.+) ne correspond pas aux couleurs du Chef de chasse\.$/, name=>`${name} does not match the Hunting Chief's colors.`],
+    [/^(.+) est un Chef : il ne va pas dans le deck principal\.$/, name=>`${name} is a Chief and cannot go in the main deck.`],
+    [/^(.+) est un jeton : il ne va pas dans le deck principal\.$/, name=>`${name} is a token and cannot go in the main deck.`],
     [/^· (.+)$/, value=>`· ${translate(value)}`],
     [/^(.+), (\d+) PV restants$/, (name,n)=>`${name}, ${n} HP remaining`],
     [/^(\d+) résultats?$/, n=>`${n} result${n==='1'?'':'s'}`],

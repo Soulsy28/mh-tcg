@@ -1,13 +1,15 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.3 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.4 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
 
 ## Ce que contient le site
 
 - Une création de profil avec pseudo et mot de passe, sans email.
-- Un deck builder pour les 203 cartes actuelles et les sept Chefs de chasse.
+- Un deck builder pour les cartes actuelles, avec onglets Cartes, Chefs de chasse et Analyse.
+- Une galerie de Chefs avec illustration, capacité, recherche bilingue, filtres par couleur et extension.
+- Un deck visible à côté du catalogue, avec contrôles +/−, filtres actifs, pagination et annuler/rétablir.
 - Une bibliothèque des cartes, des deux types de jetons et de leurs images finales françaises et anglaises.
 - Un bouton FR/EN avec drapeau en haut à droite : langue de l’interface et des cartes mémorisée dans le navigateur.
 - Des recherches par nom, type et sous-type, insensibles à la casse et aux accents.
@@ -38,6 +40,18 @@ Le deck principal contient exactement 50 cartes, avec trois exemplaires maximum 
 Le builder permet de conserver un brouillon incomplet et indique les erreurs qui empêchent de jouer normalement. Toutes les cartes et tous les Chefs du catalogue sont disponibles à la construction ; la mention d'automatisation sert à choisir le mode de jeu, sans retirer les autres cartes du builder.
 
 La recherche porte sur les noms français et anglais, types, sous-types, couleurs et identifiants. Plusieurs mots doivent tous correspondre. Par exemple : `Rathian`, `dragon ancien`, `wyverne volante`, `Lance` ou `Zora forêt`. L'extension actuellement présente dans le catalogue est **MhFG** ; aucun nom d'extension supplémentaire n'est inventé.
+
+## Le nouvel atelier des decks
+
+Un nouveau deck commence par le choix de son Chef dans une galerie ; aucun Chef n’est imposé. Les Chefs proviennent du catalogue, avec pagination de 12 fiches, et la préparation du site vérifie les illustrations sans imposer le nombre initial de sept Chefs. Pour ajouter une carte ou un Chef, il faut toujours mettre à jour les données et les images françaises et anglaises correspondantes.
+
+Avant un changement de Chef qui rend des cartes incompatibles, un bilan compte les exemplaires concernés. Le joueur choisit de garder toutes les cartes en brouillon ou de retirer les incompatibles. Annuler ferme le bilan sans modifier le deck ; le retour arrière de l’atelier restaure aussi le Chef et les quantités précédentes. L’historique conserve 30 modifications de cartes ou de Chef pendant la session et reste séparé entre profils et decks. Le nom personnel du deck est conservé.
+
+Le dernier deck ouvert est mémorisé séparément pour chaque profil. Les cartes du catalogue s’affichent par pages de 24 ; les filtres de construction sont séparés de ceux de la bibliothèque. La recherche accepte les noms français et anglais, types et sous-types ; la galerie des Chefs recherche aussi dans leurs capacités. Les filtres actifs peuvent être retirés individuellement. Le focus et la position de la liste sont conservés après un ajustement de quantité.
+
+L’onglet Analyse affiche les quantités, le coût moyen, la courbe des coûts et la répartition des types. Ces mesures décrivent le deck, sans calculer de puissance ni imposer des ratios stratégiques. Sur petit écran, un bouton fixe donne accès au deck. Les onglets se parcourent avec les flèches et Début/Fin ; Annuler/Rétablir accepte Ctrl+Z/Ctrl+Y hors des champs de saisie.
+
+L’étude et ses références sont disponibles dans [docs/ANALYSE-DECKBUILDER.md](docs/ANALYSE-DECKBUILDER.md).
 
 ## Tester le jeu seul
 
