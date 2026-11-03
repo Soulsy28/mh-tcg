@@ -150,6 +150,9 @@
       }).join('')}</ol>`:`<div class="stack-empty"><span aria-hidden="true">✧</span><p>${tr('La pile est vide','The stack is empty')}</p><small>${tr('Les cartes jouées et les capacités activées apparaissent ici avant leur résolution.','Played cards and activated abilities appear here before they resolve.')}</small></div>`}</section>`;
     }
     function rectOf(node, endpoint = false) {
+      // La légende fait partie de l’entrée de pile : un tracé doit contourner
+      // l’ensemble carte + texte, et pas seulement l’image cliquable.
+      if(node?.dataset?.gameArrowNode?.startsWith('stack:'))node=node.closest?.('.stack-item') || node;
       const bounds=node?.getBoundingClientRect?.();
       if (!bounds) return null;
       const left=bounds.left??bounds.x,top=bounds.top??bounds.y;
