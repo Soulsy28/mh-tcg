@@ -21,7 +21,8 @@
     const cards = Array.isArray(catalog) ? catalog : catalog.cards;
     return cards.find(c=>c.id===String(id).replace(/^MhFG-/, '').padStart(3,'0'));
   }
-  function log(s,text) { s.log.push({text,turn:s.turn}); if(s.log.length>250)s.log.shift(); }
+  // Public history must never include the identity of a card drawn from a hidden zone.
+  function log(s,text) { s.log.push({text,turn:s.turn,public:true}); if(s.log.length>250)s.log.shift(); }
   function next(s) { s.seq++; return s.seq; }
   function rng(s) { s.seed=(Math.imul(1664525,s.seed)+1013904223)>>>0; return s.seed/4294967296; }
   function shuffle(s,arr) { const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rng(s)*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
@@ -72,14 +73,14 @@
     decks.forEach((d,p)=>{
       const player={name:(options.names||[])[p]||'Joueur '+(p+1),chief:makeInstance(s,d.chiefId,p),hand:[],deck:[],discard:[],camp:[],items:[],rations:{ready:0,tapped:0,deck:12},pool:0,score:0,mulliganUsed:false};
       s.players.push(player); player.deck=shuffle(s,d.cards.map(id=>makeInstance(s,id,p)));
-      player.hand=player.deck.splice(0,5);
+      log(s,player.name+' mélange son deck.');draw(s,p,5,catalog);
     });
     s.priorityPlayer=s.activePlayer;
     log(s,'Partie créée. Chaque joueur choisit de garder sa main ou de faire un mulligan.');
     return s;
   }
   function newEntry(s,kind,p,source,extra={}) {
-    return {uid:'e'+next(s),kind,player:p,sourceId:source?.uid||null,sourceCardId:source?.cardId||null,sourceSnapshot:source?clone(source):null,label:extra.label||kind,targetIds:[],...extra};
+    return {uid:'e'+next(s),kind,player:p,sourceId:source?.uid||null,sourceCardId:source?.cardId||null,cardId:source?.cardId||null,sourceSnapshot:source?clone(source):null,label:extra.label||kind,targetIds:[],...extra};
   }
   function trigger(s,kind,source,extra={}) { s.triggers.push(newEntry(s,kind,source.controller,source,extra)); }
   function addMod(s,c,kind,value,duration='turn',extra={}) { if(c)c.mods.push({kind,value,duration,turn:s.turn,combatId:s.combat?.id||null,...extra}); }
@@ -93,10 +94,17 @@
     }
   }
   function resources(s,p) { const x=s.players[p];return x.rations.ready+x.pool; }
-  function pay(s,p,n) { const x=s.players[p];if(resources(s,p)<n)throw Error('Vous ne disposez pas d’assez de rations disponibles.');const fromPool=Math.min(x.pool,n);x.pool-=fromPool;n-=fromPool;x.rations.ready-=n;x.rations.tapped+=n; }
-  function eat(s,p,n) { const r=s.players[p].rations;if(r.ready+r.tapped<n)throw Error('Pas assez de rations sur le terrain pour Manger '+n+'.');const tapped=Math.min(n,r.tapped);r.tapped-=tapped;r.ready-=n-tapped;r.deck+=n; }
-  function addRation(s,p,n=1,tapped=false) { const r=s.players[p].rations;const actual=Math.min(n,r.deck);r.deck-=actual;r[tapped?'tapped':'ready']+=actual; }
-  function draw(s,p,n,catalog) { for(let i=0;i<n&&s.winner===null;i++){const x=s.players[p];if(!x.deck.length){s.winner=1-p;log(s,x.name+' ne peut plus piocher et perd la partie.');return;}const c=x.deck.shift();resetInstance(c);x.hand.push(c);} }
+  function pay(s,p,n) { const x=s.players[p],cost=n;if(resources(s,p)<n)throw Error('Vous ne disposez pas d’assez de rations disponibles.');const fromPool=Math.min(x.pool,n);x.pool-=fromPool;n-=fromPool;x.rations.ready-=n;x.rations.tapped+=n;if(cost)log(s,x.name+' paie ['+cost+'] : '+n+' ration(s) engagée(s), ['+fromPool+'] ressource(s) temporaire(s).'); }
+  function eat(s,p,n) { const r=s.players[p].rations;if(r.ready+r.tapped<n)throw Error('Pas assez de rations sur le terrain pour Manger '+n+'.');const tapped=Math.min(n,r.tapped);r.tapped-=tapped;r.ready-=n-tapped;r.deck+=n;log(s,s.players[p].name+' Mange '+n+' ration'+(n>1?'s':'')+' (retour dans la réserve).'); }
+  function addRation(s,p,n=1,tapped=false) { const x=s.players[p],r=x.rations;const actual=Math.min(n,r.deck);r.deck-=actual;r[tapped?'tapped':'ready']+=actual;if(actual)log(s,x.name+' ajoute '+actual+' ration'+(actual>1?'s':'')+' '+(tapped?'engagée':'dégagée')+(actual>1?'s':'')+' depuis sa réserve.');if(actual<n)log(s,x.name+' ne peut pas ajouter '+(n-actual)+' ration'+(n-actual>1?'s':'')+' : sa réserve est vide.');return actual; }
+  function draw(s,p,n,catalog) {
+    const x=s.players[p];let actual=0;
+    for(let i=0;i<n&&s.winner===null;i++){
+      if(!x.deck.length){if(actual)log(s,x.name+' pioche '+actual+' carte'+(actual>1?'s':'')+'.');s.winner=1-p;log(s,x.name+' ne peut plus piocher et perd la partie.');return actual;}
+      const c=x.deck.shift();resetInstance(c);x.hand.push(c);actual++;
+    }
+    if(actual)log(s,x.name+' pioche '+actual+' carte'+(actual>1?'s':'')+'.');return actual;
+  }
   function resetInstance(c) { c.incarnation=(c.incarnation||0)+1;c.tapped=false;c.damage=0;c.counters={};c.mods=[];c.used={};c.overexerted=false;c.skipNextUntap=false;delete c.lastDamage; }
   function removeBoard(s,c) {
     const zones=[s.hunting,...s.players.flatMap(p=>[p.camp,p.items])];
@@ -208,7 +216,8 @@
     for(const c of board(s)){c.used={};c.mods=c.mods.filter(m=>!(m.duration==='nextStart'&&m.player===s.activePlayer));}
     const p=s.players[s.activePlayer];
     log(s,'Tour '+s.turn+' — '+p.name+'.');
-    p.rations.ready+=p.rations.tapped;p.rations.tapped=0;
+    const refreshed=p.rations.tapped;p.rations.ready+=p.rations.tapped;p.rations.tapped=0;
+    if(refreshed)log(s,p.name+' dégage '+refreshed+' ration'+(refreshed>1?'s':'')+' au début du tour.');
     for(const c of board(s).filter(c=>c.controller===s.activePlayer)){
       if(c.overexerted){c.overexerted=false;continue;}
       if(c.skipNextUntap){c.skipNextUntap=false;continue;}
@@ -259,7 +268,7 @@
     if(s.combat?.stage==='interpose'){s.phase='combat';return;}
     if(s.combat?.interrupted&&!s.combat.damageDone){finishCombat(s,catalog);return;}
     if(s.flow==='start'){
-      addRation(s,s.activePlayer);draw(s,s.activePlayer,1,catalog);log(s,'Une ration est ajoutée et une carte est piochée.');
+      addRation(s,s.activePlayer);draw(s,s.activePlayer,1,catalog);
       if(s.winner!==null){s.phase='ended';return;}s.flow='main';s.phase='main';s.priorityPlayer=s.activePlayer;return;
     }
     if(s.flow==='combat'){
@@ -469,7 +478,7 @@
     if(action.type==='mulligan'||action.type==='keep'){
       const player=s.players[p];
       if(action.type==='mulligan'){
-        player.hand.forEach(resetInstance);player.deck.push(...player.hand);player.hand=player.deck.splice(0,5);player.hand.forEach(resetInstance);player.deck=shuffle(s,player.deck);player.mulliganUsed=true;log(s,player.name+' fait son mulligan.');
+        player.hand.forEach(resetInstance);player.deck.push(...player.hand);player.hand=[];log(s,player.name+' remet sa main dans son deck pour un mulligan.');draw(s,p,5,catalog);player.deck=shuffle(s,player.deck);player.mulliganUsed=true;log(s,player.name+' mélange son deck après le mulligan.');
       }else log(s,player.name+' garde sa main.');
       s.mulliganDone[p]=true;const other=1-p;
       if(!s.mulliganDone[other])s.priorityPlayer=other;else beginTurn(s,catalog);
