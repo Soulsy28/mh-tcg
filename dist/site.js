@@ -19,6 +19,7 @@
   const colors={Vert:'#5a944f',Jaune:'#d2b654',Orange:'#cf8d42',Rouge:'#b8614d',Violet:'#9474af',Bleu:'#659cbb',Marron:'#957559'};
   const labels={large:'Grands Monstres',small:'Petits Monstres',hunter:'Chasseurs',item:'Objets',technique:'Techniques',chief:'Chefs de chasse',token:'Jetons'};
   let profile=null,decks=[],draft=null,game=null,gameUI=null,peer=null,hostMatch=null,revision=-1,toastTimer,searchTimer;
+  const actionRequests=MHMatch.ActionRequests?new MHMatch.ActionRequests():null;
   const ui={route:'accueil',search:'',color:'',type:'',cost:'',sort:'id',extension:'',compatible:true,deckId:null,mode:'auto',leftDeck:'',rightDeck:'',network:'internet',onlineStatus:'idle',onlineLabel:'Aucune connexion en cours.',offer:'',answer:'',offerInput:'',answerInput:'',busy:false,turnUrls:'',turnUser:'',turnPassword:'',authMode:'login',onlineRole:null,onlineMode:'manual'};
   function toast(text,error=false){const t=document.getElementById('site-toast');t.dataset.originalMessage=text;t.textContent=I.t(text);t.className='toast'+(error?' error':'');t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,5000);}
   function refreshProfile(){try{profile=store.current();decks=profile?store.listDecks():[];}catch(err){profile=null;decks=[];toast(err.message,true);}}
@@ -231,14 +232,98 @@
   function resumeGame(){const data=store.getGame();if(!data||data.format!=='mh-tcg-site-game'||data.version!==1||data.catalogVersion!==C.version||!data.state?.players||data.state.players.length!==2)throw Error('Aucun test compatible à reprendre.');const engine=chosenEngine(data.mode);engine.getActions(data.state,C);disconnect(true);game={online:false,mode:data.mode,engine,state:data.state};route('table');}
   function renderTable(){if(!game){main.innerHTML=`<div class="site-main">${heading('La table est libre','Choisis un mode de jeu pour commencer.')}<button class="button primary" data-go="jouer">Préparer une partie</button></div>`;return;}main.innerHTML=`<div class="site-main play-workspace"><div class="match-top"><p>${game.online?`⇄ Partie directe · <strong>${ui.onlineStatus==='connected'?'Connecté':'Connexion interrompue'}</strong>`:'♧ Mode test solo · Tu contrôles les deux camps'}</p><button class="text-button" data-do="about">Aide & règles</button></div>${game.mode==='manual'?'<div class="manual-notice">Table libre : les effets des cartes et les coûts particuliers sont à résoudre manuellement. Les outils de carte permettent de modifier les blessures, la Force, les marqueurs et les zones.</div>':''}<div id="game-mount" class="game-mount"></div></div>`;gameUI=MHGameUI.create({container:document.getElementById('game-mount'),catalog:C,engine:game.engine,onAction:actGame,onExit:()=>route('jouer'),onSave:()=>{if(game.online)toast('Garde cette page ouverte pour continuer la partie directe.');else{saveSolo();toast('Test enregistré dans ton profil local.');}},onExport:exportGame,onError:err=>toast(err.message||String(err),true),localPlayer:game.online?game.localPlayer:null,mode:game.mode});updateGameUI();}
   function updateGameUI(){if(!gameUI||!game)return;if(game.online){const packet=game.localPlayer===0?hostMatch?.viewFor(0):game.packet;if(packet)gameUI.update(packet.state,peer?.connected?packet.actions:[]);}else gameUI.update(game.state,game.engine.getActions(game.state,C));}
-  function actGame(action){try{if(game.online){if(!peer?.connected)throw Error('La connexion avec ton ami est interrompue.');if(game.localPlayer===0){hostMatch.apply(0,action,hostMatch.revision);sendState();updateGameUI();}else{const intent={id:action.id,type:action.type};if(Array.isArray(action.targetIds))intent.targetIds=action.targetIds;if(action.choiceId!==undefined)intent.choiceId=action.choiceId;peer.send({type:'action',revision,action:intent});}}else{game.state=game.engine.dispatch(game.state,action,C);saveSolo();updateGameUI();}}catch(err){toast(err.message,true);}}
+  async function actGame(action){
+    try{
+      if(!game)throw Error('La table n’est plus ouverte.');
+      if(game.online){
+        if(!peer?.connected)throw Error('La connexion avec ton ami est interrompue.');
+        if(game.localPlayer===0){
+          hostMatch.apply(0,action,hostMatch.revision);updateGameUI();sendState();
+        }else{
+          const intent={id:action.id,type:action.type};
+          if(Array.isArray(action.targetIds))intent.targetIds=action.targetIds;
+          if(action.choiceId!==undefined)intent.choiceId=action.choiceId;
+          if(action.type==='annotation'&&typeof action.sourceId==='string')intent.sourceId=action.sourceId;
+          if(actionRequests&&game.packet?.supportsActionAck===true){
+            await actionRequests.send(requestId=>peer.send({type:'action',revision,requestId,action:intent}));
+          }else peer.send({type:'action',revision,action:intent});
+        }
+      }else{
+        const next=action.type==='annotation'?MHMatch.applyAnnotation(game.state,action,action.player):game.engine.dispatch(game.state,action,C);
+        game.state=MHMatch.pruneAnnotations(next);saveSolo();updateGameUI();
+      }
+    }catch(err){toast(err.message||String(err),true);}
+  }
   function exportGame(){if(!game)return;download(game.online?{format:'mh-tcg-personal-match-view',version:1,packet:game.localPlayer===0?hostMatch.viewFor(0):game.packet}:{format:'mh-tcg-site-game',version:1,catalogVersion:C.version,mode:game.mode,state:game.state},game.online?'MH-TCG-vue-de-partie.json':'MH-TCG-test-solo.json');}
-  function updateNetworkStatus(status,label){ui.onlineStatus=status;ui.onlineLabel=label;const el=document.getElementById('network-status');if(el){el.className='network-status'+(status==='connected'?' connected':['failed','closed','error'].includes(status)?' error':'');el.innerHTML=`<i></i><span>${esc(I.t(label))}</span>`;}if(game?.online)updateGameUI();}
-  function disconnect(silent=false){const old=peer;peer=null;old?.close();hostMatch=null;revision=-1;ui.onlineRole=null;ui.onlineStatus='idle';ui.onlineLabel='Aucune connexion en cours.';ui.offer='';ui.answer='';if(game?.online){gameUI?.destroy();gameUI=null;game=null;}if(!silent){toast('La connexion directe a été fermée.');render();}}
+  function updateNetworkStatus(status,label){
+    ui.onlineStatus=status;ui.onlineLabel=label;
+    if(['disconnected','failed','closed','error'].includes(status))actionRequests?.cancel(Error('La connexion avec ton ami est interrompue.'));
+    const el=document.getElementById('network-status');
+    if(el){el.className='network-status'+(status==='connected'?' connected':['failed','closed','error'].includes(status)?' error':'');el.innerHTML=`<i></i><span>${esc(I.t(label))}</span>`;}
+    if(game?.online)updateGameUI();
+  }
+  function disconnect(silent=false){
+    actionRequests?.cancel(Error('La partie directe a été fermée.'));
+    const old=peer;peer=null;old?.close();hostMatch=null;revision=-1;ui.onlineRole=null;ui.onlineStatus='idle';ui.onlineLabel='Aucune connexion en cours.';ui.offer='';ui.answer='';
+    if(game?.online){gameUI?.destroy();gameUI=null;game=null;}
+    if(!silent){toast('La connexion directe a été fermée.');render();}
+  }
   function networkOptions(){const o={mode:ui.network};if(ui.turnUrls.trim()){if(!/^turns?:/i.test(ui.turnUrls.trim()))throw Error('L’adresse du relais doit commencer par turn: ou turns:.');o.turn={urls:ui.turnUrls.trim(),username:ui.turnUser,credential:ui.turnPassword};}return o;}
   function newPeer(role){disconnect(true);ui.onlineRole=role;const session=new MHP2P.PeerSession({onStatus:(status,label)=>{if(peer===session)updateNetworkStatus(status,label);},onMessage:message=>{if(peer===session)handlePeer(message);},onOpen:()=>{if(peer!==session)return;updateNetworkStatus('connected','Connexion directe établie. Préparation de la table…');if(role==='guest')session.send({type:'hello',nickname:profile.username,deck:clone(getDeck(ui.leftDeck)),catalogVersion:C.version});},onClose:reason=>{if(peer===session&&ui.onlineStatus!=='failed')updateNetworkStatus('closed',reason||'Ton ami a quitté la connexion. La partie est suspendue.');}});peer=session;return session;}
-  function sendState(){if(!peer?.connected||!hostMatch)return;peer.send(hostMatch.viewFor(1));}
-  function handlePeer(message){try{if(!message||typeof message!=='object')return;if(ui.onlineRole==='host'&&message.type==='hello'){if(hostMatch)return;if(message.catalogVersion!==C.version)throw Error('Les deux navigateurs doivent utiliser la même version du catalogue.');if(typeof message.nickname!=='string'||message.nickname.length<1||message.nickname.length>24)throw Error('Le pseudo reçu est invalide.');checkPlayable(message.deck,ui.onlineMode);const own=getDeck(ui.leftDeck);checkPlayable(own,ui.onlineMode);const engine=chosenEngine(ui.onlineMode),state=engine.createGame(C,{decks:[own,message.deck],names:[profile.username,message.nickname],seed:crypto.getRandomValues(new Uint32Array(1))[0],firstPlayer:crypto.getRandomValues(new Uint8Array(1))[0]%2});hostMatch=new MHMatch.HostMatch({catalog:C,engine,initialState:state});game={online:true,mode:ui.onlineMode,engine,localPlayer:0};sendState();updateNetworkStatus('connected','Connexion directe établie. La table est prête.');route('table');return;}if(ui.onlineRole==='host'&&message.type==='action'){if(!hostMatch)throw Error('La table n’est pas encore prête.');hostMatch.apply(1,message.action,message.revision);sendState();updateGameUI();return;}if(ui.onlineRole==='guest'&&message.type==='state'){if(!Number.isInteger(message.revision)||message.revision<0||message.revision<revision||!message.state?.players||message.state.players.length!==2||!Array.isArray(message.actions))throw Error('L’état de partie reçu est invalide.');if(message.state.catalogVersion!==C.version)throw Error('Le catalogue de ton ami utilise une autre version.');revision=message.revision;const isFirst=!game?.online;game={online:true,mode:message.engineMode==='manual'?'manual':'auto',engine:chosenEngine(message.engineMode),localPlayer:1,packet:message};updateNetworkStatus('connected','Connexion directe établie. La table est prête.');if(isFirst)route('table');else updateGameUI();return;}if(message.type==='error')toast(typeof message.message==='string'?message.message.slice(0,500):'Ton ami ne peut pas poursuivre cette action.',true);}catch(err){toast(err.message,true);if(peer?.connected){try{peer.send({type:'error',message:err.message});if(hostMatch)sendState();}catch{}}}}
+  function sendState(ackId){
+    if(!peer?.connected||!hostMatch)return false;
+    try{
+      const packet=hostMatch.viewFor(1);packet.supportsActionAck=!!actionRequests;
+      if(Number.isSafeInteger(ackId)&&ackId>0)packet.ackId=ackId;
+      peer.send(packet);return true;
+    }catch{
+      // L'état est déjà validé : ne pas annoncer à l'invité un refus de son action.
+      updateNetworkStatus('failed','La synchronisation est interrompue. La table conserve la dernière action validée.');
+      toast('La table conserve la dernière action validée, mais son envoi a échoué. La partie est suspendue.',true);
+      try{peer?.close();}catch{}
+      return false;
+    }
+  }
+  function handlePeer(message){
+    try{
+      if(!message||typeof message!=='object')return;
+      if(ui.onlineRole==='host'&&message.type==='hello'){
+        if(hostMatch)return;
+        if(message.catalogVersion!==C.version)throw Error('Les deux navigateurs doivent utiliser la même version du catalogue.');
+        if(typeof message.nickname!=='string'||message.nickname.length<1||message.nickname.length>24)throw Error('Le pseudo reçu est invalide.');
+        checkPlayable(message.deck,ui.onlineMode);const own=getDeck(ui.leftDeck);checkPlayable(own,ui.onlineMode);
+        const engine=chosenEngine(ui.onlineMode),state=engine.createGame(C,{decks:[own,message.deck],names:[profile.username,message.nickname],seed:crypto.getRandomValues(new Uint32Array(1))[0],firstPlayer:crypto.getRandomValues(new Uint8Array(1))[0]%2});
+        hostMatch=new MHMatch.HostMatch({catalog:C,engine,initialState:state});game={online:true,mode:ui.onlineMode,engine,localPlayer:0};
+        if(sendState())updateNetworkStatus('connected','Connexion directe établie. La table est prête.');route('table');return;
+      }
+      if(ui.onlineRole==='host'&&message.type==='action'){
+        if(!hostMatch)throw Error('La table n’est pas encore prête.');
+        if(message.requestId!=null&&(!Number.isSafeInteger(message.requestId)||message.requestId<=0))throw Error('La demande de jeu est invalide.');
+        hostMatch.apply(1,message.action,message.revision);updateGameUI();sendState(message.requestId);return;
+      }
+      if(ui.onlineRole==='guest'&&message.type==='state'){
+        if(!Number.isInteger(message.revision)||message.revision<0||message.revision<revision||!message.state?.players||message.state.players.length!==2||!Array.isArray(message.actions))throw Error('L’état de partie reçu est invalide.');
+        if(message.state.catalogVersion!==C.version)throw Error('Le catalogue de ton ami utilise une autre version.');
+        revision=message.revision;const isFirst=!game?.online;
+        game={online:true,mode:message.engineMode==='manual'?'manual':'auto',engine:chosenEngine(message.engineMode),localPlayer:1,packet:message};
+        updateNetworkStatus('connected','Connexion directe établie. La table est prête.');
+        if(isFirst)route('table');else updateGameUI();
+        if(message.supportsActionAck===true)actionRequests?.ack(message.ackId);
+        return;
+      }
+      if(message.type==='error'){
+        const reason=typeof message.message==='string'?message.message.slice(0,500):'Ton ami ne peut pas poursuivre cette action.';
+        if(!actionRequests?.fail(message.requestId,Error(reason)))toast(reason,true);
+      }
+    }catch(err){
+      toast(err.message,true);
+      if(peer?.connected){try{
+        const error={type:'error',message:err.message};
+        if(ui.onlineRole==='host'&&message?.type==='action'&&Number.isSafeInteger(message.requestId)&&message.requestId>0)error.requestId=message.requestId;
+        peer.send(error);if(hostMatch)sendState();
+      }catch{}}
+    }
+  }
   async function signal(kind){if(!requireProfile())return;if(ui.busy)throw Error('La connexion est déjà en cours de préparation.');ui.leftDeck=document.getElementById('online-deck')?.value||ui.leftDeck||decks[0]?.id;const d=getDeck(ui.leftDeck);if(!d)throw Error('Crée ou importe un deck avant de lancer une partie.');if(kind==='offer')checkPlayable(d,ui.mode);else if(kind==='answer')checkPlayable(d,'manual');const options=networkOptions();ui.onlineMode=ui.mode;const input=kind==='answer'?ui.offerInput:ui.answerInput;ui.busy=true;if(ui.route==='enligne')render();try{if(kind==='offer'){const p=newPeer('host');ui.offer=await p.createOffer(options);}else if(kind==='answer'){const p=newPeer('guest');ui.answer=await p.acceptOffer(input,options);}else{if(!peer||!ui.offer)throw Error('Crée d’abord une invitation.');await peer.acceptAnswer(input);}}finally{ui.busy=false;if(ui.route==='enligne')render();}}
   async function command(name){try{switch(name){case'account':account();break;case'register':auth('register');break;case'about':about();break;case'logout':builderHistories.clear();ui.newDeck=false;disconnect(true);game=null;draft=null;store.logout();modal.close();route('accueil');render();toast('Tu es déconnecté. Tes decks restent dans ce navigateur.');break;case'new-deck':newDeck();break;case'starter-decks':starterDecks();render();break;case'export-all':download(store.exportProfile(),'MH-TCG-mes-decks.json');break;case'export-deck':download({format:'mh-tcg-deck',version:1,deck:{name:draft.name,chiefId:draft.chiefId,cards:draft.cards}},'MH-TCG-'+draft.name.replace(/[^\p{L}\p{N} -]/gu,'')+'.json');break;case'import-decks':if(requireProfile())document.getElementById('deck-upload').click();break;case'duplicate-deck':draft=store.saveDeck({name:draft.name+' · copie',chiefId:draft.chiefId,cards:draft.cards});decks=store.listDecks();ui.deckId=draft.id;render();toast('Une copie de ton deck a été créée.');break;case'delete-deck':showModal('Supprimer ce deck ?',`<p>Le deck « ${esc(draft.name)} » sera retiré de ce profil. Tu peux l’exporter avant de le supprimer.</p>`,'<button class="button" data-close>Conserver</button><button class="button danger" data-do="confirm-delete">Supprimer le deck</button>');break;case'confirm-delete':store.deleteDeck(draft.id);decks=store.listDecks();loadDraft(decks[0]?.id);modal.close();render();break;case'start-solo':startSolo();break;case'resume-game':resumeGame();break;case'create-offer':await signal('offer');break;case'accept-offer':await signal('answer');break;case'accept-answer':await signal('final');break;case'disconnect':disconnect();break;}}catch(err){ui.busy=false;toast(err.message,true);}}
   document.addEventListener('click',event=>{const b=event.target.closest('button,a');if(b?.id==='language-switch'){I.setLanguage(I.getLanguage()==='fr'?'en':'fr');return;}if(!b||b.closest('.game-mount')||b.closest('.game-ui-shell')||b.closest('[data-mh-game-ui]'))return;if(b.dataset.go){if(b.hasAttribute('data-close'))modal.close();route(b.dataset.go);return;}if(ui.route==='decks'&&handleBuilderClick(b,event))return;if(b.hasAttribute('data-close'))return modal.close();if(b.dataset.do)return void command(b.dataset.do);if(b.dataset.authMode)return auth(b.dataset.authMode);if(b.dataset.detail)return detail(b.dataset.detail);if(b.dataset.editDeck){loadDraft(b.dataset.editDeck);route('decks');return;}if(b.dataset.testDeck){const d=getDeck(b.dataset.testDeck);ui.leftDeck=d?.id;ui.mode=validation(d).automated?'auto':'manual';route('test');return;}if(b.dataset.color!==undefined){ui.color=b.dataset.color;render();return;}if(b.dataset.plus)return mutateDeck(b.dataset.plus,1);if(b.dataset.minus)return mutateDeck(b.dataset.minus,-1);if(b.dataset.mode){ui.mode=b.dataset.mode;render();return;}if(b.dataset.copy){const text=ui[b.dataset.copy];if(!text)return;void navigator.clipboard.writeText(text).then(()=>toast('Code copié. Envoie-le à ton ami.')).catch(()=>toast('La copie automatique est indisponible. Sélectionne et copie le code dans le champ.',true));}});
