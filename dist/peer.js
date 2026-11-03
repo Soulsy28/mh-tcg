@@ -286,15 +286,44 @@
   }
   function hiddenCards(cards) { return (Array.isArray(cards) ? cards : []).slice(0, 500).map(() => ({uid: null, hidden: true})); }
   function visibleCards(cards) { return (Array.isArray(cards) ? cards : []).slice(0, 500).map(visibleCard).filter(Boolean); }
+  const ARROWS_PER_PLAYER = 6;
+  const endpoint = value => typeof value === 'string' && value.length > 0 && value.length <= 112;
+  /** Only cards already public to both players may be linked by an annotation. */
+  function publicArrowNodes(state) {
+    const nodes = new Set();
+    const players = Array.isArray(state?.players) ? state.players.slice(0, 2) : [];
+    const cards = [...(Array.isArray(state?.hunting) ? state.hunting.slice(0, 500) : []), ...players.flatMap(player => [player?.chief, ...(Array.isArray(player?.camp) ? player.camp.slice(0, 500) : []), ...(Array.isArray(player?.items) ? player.items.slice(0, 500) : [])])];
+    for (const card of cards) if (isObject(card) && !card.hidden && card.cardId && typeof card.uid === 'string' && card.uid.length > 0 && card.uid.length <= 100) nodes.add('card:' + card.uid);
+    for (const entry of (Array.isArray(state?.stack) ? state.stack : []).slice(0, 100)) {
+      const id = entry?.uid || entry?.id;
+      if (typeof id === 'string' && id.length > 0 && id.length <= 100) nodes.add('stack:' + id);
+    }
+    return nodes;
+  }
+  function publicArrows(state) {
+    const nodes = publicArrowNodes(state), ids = new Set(), pairs = new Set(), counts = [0, 0], arrows = [];
+    for (const arrow of (Array.isArray(state?.arrows) ? state.arrows : []).slice(0, 100)) {
+      if (!isObject(arrow) || ![0, 1].includes(arrow.player) || typeof arrow.id !== 'string' || !/^arrow-[1-9]\d{0,8}$/.test(arrow.id) || !endpoint(arrow.from) || !endpoint(arrow.to) || arrow.from === arrow.to || !nodes.has(arrow.from) || !nodes.has(arrow.to) || ids.has(arrow.id) || counts[arrow.player] >= ARROWS_PER_PLAYER) continue;
+      const pair = arrow.player + '\0' + arrow.from + '\0' + arrow.to;
+      if (pairs.has(pair)) continue;
+      ids.add(arrow.id); pairs.add(pair); counts[arrow.player]++;
+      arrows.push({id: arrow.id, player: arrow.player, from: arrow.from, to: arrow.to});
+    }
+    return arrows;
+  }
   /** Vue d'affichage seulement : ne jamais lancer le moteur sur cette vue masquée. */
   function redactState(state, viewerIndex) {
     if (!isObject(state) || !Array.isArray(state.players) || state.players.length !== 2 || ![0, 1].includes(viewerIndex)) throw Error('La vue de partie demandée est invalide.');
     const combat = state.combat;
     const pending = state.pending;
+    const forbidden = new Set([...(Array.isArray(state.players[1-viewerIndex].hand) ? state.players[1-viewerIndex].hand : []), ...state.players.flatMap(player => Array.isArray(player.deck) ? player.deck : [])].map(card => card?.uid).filter(Boolean));
+    const manualResolution = pending?.kind === 'manual-resolution';
+    const pendingEntry = manualResolution && (pending.entry?.uid || pending.entry?.id);
     return {
       version: integer(state.version, 1), catalogVersion: str(state.catalogVersion, 100), viewerIndex,
       turn: integer(state.turn), activePlayer: state.activePlayer === 1 ? 1 : 0,
       priorityPlayer: state.priorityPlayer === 1 ? 1 : 0, phase: str(state.phase, 40),
+      flow: ['setup', 'start', 'main', 'combat', 'end'].includes(state.flow) ? state.flow : '',
       winner: state.winner === 0 || state.winner === 1 ? state.winner : null,
       players: state.players.map((p, index) => ({
         name: str(p.name, 60), chief: visibleCard(p.chief),
@@ -305,19 +334,25 @@
         pool: integer(p.pool), score: integer(p.score), mulliganUsed: !!p.mulliganUsed
       })),
       hunting: visibleCards(state.hunting),
-      stack: (Array.isArray(state.stack) ? state.stack : []).slice(0, 100).map(e => ({
-        uid: str(e.uid, 100), kind: str(e.kind, 40), player: e.player === 1 ? 1 : 0,
-        label: str(e.label), cardId: e.cardId == null ? null : str(e.cardId, 40),
-        sourceId: e.sourceId == null ? null : str(e.sourceId, 100),
-        sourceCardId: e.sourceCardId == null ? null : str(e.sourceCardId, 40),
-        targetIds: (Array.isArray(e.targetIds) ? e.targetIds : []).slice(0, 100).map(id => str(id, 100)),
-        card: e.kind === 'cast' ? visibleCard(e.card) : null
-      })),
+      stack: (Array.isArray(state.stack) ? state.stack : []).slice(0, 100).map(e => {
+        const uid = str(e.uid || e.id, 100), sourceCardId = e.sourceCardId == null ? null : str(e.sourceCardId, 40);
+        return {
+          uid, kind: str(e.kind, 40), player: e.player === 1 ? 1 : 0,
+          label: str(e.label), cardId: e.cardId == null ? null : str(e.cardId, 40),
+          sourceId: e.sourceId == null || forbidden.has(e.sourceId) ? null : str(e.sourceId, 100),
+          sourceCardId,
+          // A display copy remains public after its source leaves the field. Never expose the engine snapshot.
+          sourceCard: sourceCardId ? visibleCard({uid: 'stack-source:' + uid, cardId: sourceCardId, owner: e.player, controller: e.player}) : null,
+          targetIds: (Array.isArray(e.targetIds) ? e.targetIds : []).slice(0, 100).filter(id => !forbidden.has(id)).map(id => str(id, 100)),
+          card: e.kind === 'cast' ? visibleCard(e.card) : null
+        };
+      }),
+      arrows: publicArrows(state),
       combat: !isObject(combat) ? null : {id: str(combat.id, 100), attackerId: str(combat.attackerId, 100), targetId: str(combat.targetId, 100), stage: str(combat.stage, 40), interpositionUsed: !!combat.interpositionUsed, interrupted: !!combat.interrupted, damageDone: !!combat.damageDone},
-      pending: !isObject(pending) ? null : {player: pending.player === 1 ? 1 : 0, label: pending.player === viewerIndex ? str(pending.label) : 'L’adversaire effectue un choix.', private: pending.player !== viewerIndex},
+      pending: !isObject(pending) ? null : {player: pending.player === 1 ? 1 : 0, label: manualResolution || pending.player === viewerIndex ? str(pending.label) : 'L’adversaire effectue un choix.', private: !manualResolution && pending.player !== viewerIndex, ...(manualResolution ? {kind: 'manual-resolution', entryId: publicArrowNodes(state).has('stack:' + pendingEntry) ? pendingEntry : null} : {})},
       // Les anciens journaux n'ont pas de classification de confidentialité : ne pas les retransmettre.
       log: (Array.isArray(state.log) ? state.log : []).filter(l => isObject(l) && l.public === true).slice(-100).map(l => ({turn: integer(l.turn), text: str(l.text, 1000)}))
     };
   }
-  return {PeerSession, encodeSignal, decodeSignal, rtcConfiguration, redactState, constants: {PROTOCOL, VERSION, MAX_CODE, MAX_MESSAGE, ICE_TIMEOUT, SIGNAL_TTL}};
+  return {PeerSession, encodeSignal, decodeSignal, rtcConfiguration, redactState, publicArrowNodes, publicArrows, constants: {PROTOCOL, VERSION, MAX_CODE, MAX_MESSAGE, ICE_TIMEOUT, SIGNAL_TTL, ARROWS_PER_PLAYER}};
 });
