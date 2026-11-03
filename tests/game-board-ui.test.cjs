@@ -367,6 +367,30 @@ test('les flèches restent bornées au plateau et ne dessinent aucun endpoint ca
   const clipping=h.element('section');clipping.getBoundingClientRect=()=>({left:0,top:150,right:900,bottom:900});
   first.closest=selector=>selector==='.board-scroll,.stack-cards,.hand-cards,.inspector-panel'?clipping:null;
   h.context.listeners.scroll();h.tick(32);assert(!h.arrows.innerHTML.includes('data-arrow-id="visible"'));
+  // La carte de pile seule s’arrête à y=240, mais ses libellés continuent
+  // jusqu’à y=360. Une flèche vers la carte située en dessous doit sortir
+  // de l’entrée complète, sans traverser son propre nom ou sa résolution.
+  const stack=node('stack:with-metadata',100,100),entry=h.element('li');
+  entry.getBoundingClientRect=()=>({left:100,top:100,right:248,bottom:360});
+  stack.closest=selector=>selector==='.stack-item'?entry:null;
+  second.getBoundingClientRect=()=>({left:100,top:500,right:200,bottom:640});
+  h.content.querySelectorAll=selector=>['[data-game-arrow-node]','.game-card,.stack-card,.inspector-image'].includes(selector)?[stack,second]:[];
+  h.state.stack=[{uid:'with-metadata',kind:'ability',player:0,cardId:'022'}];
+  h.state.arrows=[{id:'metadata-source',player:0,from:'stack:with-metadata',to:'card:'+b.uid},{id:'metadata-target',player:1,from:'card:'+b.uid,to:'stack:with-metadata'}];
+  h.update([]);h.tick(48);
+  for(const id of ['metadata-source','metadata-target']) {
+    const group=h.arrows.innerHTML.match(new RegExp('data-arrow-id="'+id+'">([\\s\\S]+?)<\\/g>'))[1];
+    const route=group.match(/class="game-arrow-line" d="([^"]+)"/)[1];
+    const coordinates=route.match(/-?\d+(?:\.\d+)?/g).map(Number);
+    const startOrEnd=id==='metadata-source'?coordinates.slice(0,2):coordinates.slice(-2);
+    const [x,y]=startOrEnd;
+    assert(x<100||x>248||y<100||y>360,'le départ et la pointe sont hors de la carte ET de sa légende');
+    for(let index=2;index<coordinates.length;index+=2) {
+      const ax=coordinates[index-2],ay=coordinates[index-1],bx=coordinates[index],by=coordinates[index+1];
+      if(ay===by)assert(!(ay>240&&ay<360&&Math.max(ax,bx)>100&&Math.min(ax,bx)<248),'le segment ne barre pas les métadonnées de pile');
+      if(ax===bx)assert(!(ax>100&&ax<248&&Math.max(ay,by)>240&&Math.min(ay,by)<360),'le segment ne traverse pas les métadonnées de pile');
+    }
+  }
   h.ui.destroy();assert.equal(h.frames.size,0);
 });
 
