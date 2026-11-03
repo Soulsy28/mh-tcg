@@ -88,14 +88,17 @@
   function tap(s,c,catalog) { if(!c||c.tapped)return;c.tapped=true;if(c.cardId==='015')trigger(s,'ellie',c,{label:'Ellie : +1 de Force'}); }
   function untap(s,c,catalog,atStart=false) {
     if(!c||!c.tapped)return;c.tapped=false;
-    if(!atStart&&getCard(catalog,c.cardId)?.type==='hunter'&&c.damage>0){
-      const chief=s.players[c.controller].chief;
-      if(chief.cardId==='202'&&!chief.used.heal){chief.used.heal=true;trigger(s,'silas',chief,{targetIds:[c.uid],label:'Silas : soin après dégagement'});}
+  }
+  function triggerSilas(s,player) {
+    const chief=s.players[player]?.chief;
+    if(chief?.cardId==='202'&&!chief.used.heal){
+      chief.used.heal=true;
+      trigger(s,'silas',chief,{label:'Silas : soigner un allié'});
     }
   }
   function resources(s,p) { const x=s.players[p];return x.rations.ready+x.pool; }
   function pay(s,p,n) { const x=s.players[p],cost=n;if(resources(s,p)<n)throw Error('Vous ne disposez pas d’assez de rations disponibles.');const fromPool=Math.min(x.pool,n);x.pool-=fromPool;n-=fromPool;x.rations.ready-=n;x.rations.tapped+=n;if(cost)log(s,x.name+' paie ['+cost+'] : '+n+' ration(s) engagée(s), ['+fromPool+'] ressource(s) temporaire(s).'); }
-  function eat(s,p,n) { const r=s.players[p].rations;if(r.ready+r.tapped<n)throw Error('Pas assez de rations sur le terrain pour Manger '+n+'.');const tapped=Math.min(n,r.tapped);r.tapped-=tapped;r.ready-=n-tapped;r.deck+=n;log(s,s.players[p].name+' Mange '+n+' ration'+(n>1?'s':'')+' (retour dans la réserve).'); }
+  function eat(s,p,n) { const r=s.players[p].rations;if(r.ready+r.tapped<n)throw Error('Pas assez de rations sur le terrain pour Manger '+n+'.');const tapped=Math.min(n,r.tapped);r.tapped-=tapped;r.ready-=n-tapped;r.deck+=n;log(s,s.players[p].name+' Mange '+n+' ration'+(n>1?'s':'')+' (retour dans la réserve).');if(n>0)triggerSilas(s,p); }
   function addRation(s,p,n=1,tapped=false) { const x=s.players[p],r=x.rations;const actual=Math.min(n,r.deck);r.deck-=actual;r[tapped?'tapped':'ready']+=actual;if(actual)log(s,x.name+' ajoute '+actual+' ration'+(actual>1?'s':'')+' '+(tapped?'engagée':'dégagée')+(actual>1?'s':'')+' depuis sa réserve.');if(actual<n)log(s,x.name+' ne peut pas ajouter '+(n-actual)+' ration'+(n-actual>1?'s':'')+' : sa réserve est vide.');return actual; }
   function draw(s,p,n,catalog) {
     const x=s.players[p];let actual=0;
@@ -110,13 +113,16 @@
     const zones=[s.hunting,...s.players.flatMap(p=>[p.camp,p.items])];
     for(const zone of zones){const i=zone.findIndex(x=>x.uid===c.uid);if(i>=0){zone.splice(i,1);return true;}}return false;
   }
-  function moveOff(s,c,destination,catalog,reason='move') {
+  function moveOff(s,c,destination,catalog,reason='move',player=null) {
     if(!c||!removeBoard(s,c))return;
     const old=clone(c);resetInstance(c);c.controller=c.owner;
     if(destination==='hand')s.players[c.owner].hand.push(c);else s.players[c.owner].discard.push(c);
     if(s.combat&&(s.combat.attackerId===c.uid||s.combat.targetId===c.uid)){
       s.combat.interrupted=true;log(s,'Le combat est interrompu : un participant a quitté le terrain.');
     }
+    // « Vous renvoyez » désigne le joueur responsable de l'effet ou du coût,
+    // qui peut être différent du propriétaire de la carte renvoyée.
+    if(destination==='hand'&&(player===0||player===1))triggerSilas(s,player);
     return old;
   }
   function damage(s,target,amount,source,player,catalog,combat=false) {
@@ -156,6 +162,7 @@
   function candidates(s,kind,p,catalog,entry={}) {
     let xs=[];
     if(kind==='allyHunter')xs=s.players[p].camp;
+    if(kind==='allyCreature')xs=creatures(s).filter(c=>c.controller===p&&['hunter','small','large'].includes(getCard(catalog,c.cardId)?.type));
     if(kind==='allyLance')xs=s.players[p].camp.filter(c=>getCard(catalog,c.cardId).subtypes.some(t=>/^Lance$/i.test(t)));
     if(kind==='enemyHunter')xs=s.players[1-p].camp;
     if(kind==='monster')xs=s.hunting;
@@ -180,7 +187,7 @@
   let workingCatalog=null;
   const catalogFor=()=>workingCatalog;
   function prepareTrigger(s,e,catalog) {
-    const specs={ellie:'allyHunter',kokoto:'enemyMonster',kirin:'recoverTechnique'};
+    const specs={ellie:'allyHunter',silas:'allyCreature',kokoto:'enemyMonster',kirin:'recoverTechnique'};
     if(specs[e.kind]){
       const opts=candidates(s,specs[e.kind],e.player,catalog,e);
       if(!opts.length)return false;
@@ -308,7 +315,10 @@
     }
     if(e.kind==='heal'){heal(s,target,e.amount,catalog);return;}
     if(e.kind==='ellie'){if(target)addMod(s,target,'force',1);return;}
-    if(e.kind==='silas'){heal(s,target,1,catalog);return;}
+    if(e.kind==='silas'){
+      if(target?.controller===e.player&&['hunter','small','large'].includes(getCard(catalog,target.cardId)?.type))target.damage=Math.max(0,target.damage-1);
+      return;
+    }
     if(e.kind==='poogie'){addRation(s,e.player,1,true);return;}
     if(e.kind==='draw'){draw(s,e.player,1,catalog);return;}
     if(e.kind==='kelbi'){heal(s,target,1,catalog);return;}
@@ -495,7 +505,7 @@
     if(action.type==='ability'){
       const c=onBoard(s,action.sourceId),snap=clone(c);
       if(c.cardId==='044')c.counters.Chaleur-=2;else tap(s,c,catalog);
-      if(c.cardId==='124')moveOff(s,c,'hand',catalog);
+      if(c.cardId==='124')moveOff(s,c,'hand',catalog,'return',p);
       if(c.cardId==='130')moveOff(s,c,'discard',catalog,'sacrifice');
       const targetIds=action.targetIds||[];
       s.stack.push(newEntry(s,'ability',p,snap,{label:'Capacité : '+getCard(catalog,snap.cardId).name,targetIds,targetVersions:Object.fromEntries(targetIds.map(uid=>[uid,find(s,uid)?.incarnation||0]))}));
