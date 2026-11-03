@@ -30,6 +30,194 @@ jobs:
           node-version: '24'
           package-manager-cache: false
 
+      - name: Restaurer les chemins de la mise a jour 0.5.1
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const crypto = require('node:crypto');
+          // One-time repair of the 0.5.1 files uploaded at the repository root.
+          // Keep later edits at their proper paths, even while old root copies remain.
+          const files = [
+            [
+              "dist/.nojekyll",
+              "download",
+              "34d53cdcf558e871d1f0e15a62db6ba9f73a3ba6",
+              null
+            ],
+            [
+              "dist/assets/game/ration.webp",
+              "ration.webp",
+              "e7379fb66a31cb09d697e678d97a7748517d2be3",
+              null
+            ],
+            [
+              "dist/assets/theme/cartography.svg",
+              "cartography.svg",
+              "3e94d8b20bacc59f69ef5bafa2e11363f8a75c39",
+              null
+            ],
+            [
+              "dist/assets/theme/grain.svg",
+              "grain.svg",
+              "9d50ce397ce9f6baa8ffaf6246b691e181dae048",
+              null
+            ],
+            [
+              "dist/engine.js",
+              "engine.js",
+              "cd0c09ec07cd41021ff20e377a6c648bdce22f54",
+              "b4b763646a06d7db5258bb1fa6bb9154808b9439"
+            ],
+            [
+              "dist/game-ui.js",
+              "game-ui.js",
+              "93694252744ed90731c1ce0a1ff5d735849d1cb9",
+              "fa095e7810dc604e031d85fa7fac82afac2a9010"
+            ],
+            [
+              "dist/i18n.js",
+              "i18n.js",
+              "faa97149ce1da75b997117606de1ca3b7ee54315",
+              "b2c97a3cdfaee5d23b94c6dfba9a5165c884c67a"
+            ],
+            [
+              "dist/index.html",
+              "index.html",
+              "b11062e070d53007aa274e36ff3bfa13226f9f59",
+              "f04a3a697252f0d21574a0e0ec53e2bdde9e74e9"
+            ],
+            [
+              "dist/match.js",
+              "match.js",
+              "a146df6eb5c20ad024b4d1b35c1081f98b844b05",
+              "3c46d632f814628ca29992998e46453fca3186ff"
+            ],
+            [
+              "dist/peer.js",
+              "peer.js",
+              "c858fafd27bc8b3a71669b019d46088332ffa5f9",
+              "72c5da2f6c46e3a106dc5a0ca803194a75636bf9"
+            ],
+            [
+              "dist/play.css",
+              "play.css",
+              "9dd2ad7f8d6474db8fd2dce5ab13110c50d37b63",
+              null
+            ],
+            [
+              "dist/site.js",
+              "site.js",
+              "5d9ec227bb0007deb4f55a747198728c14a03f37",
+              "63a2ef954f79d89112276a17779744ed6f907f5c"
+            ],
+            [
+              "dist/table.js",
+              "table.js",
+              "903e06aa9f49152ec52818a559f2379e0707247d",
+              "cbb8a4382f703f888852bf18caa57e262a9bdbc4"
+            ],
+            [
+              "dist/theme.css",
+              "theme.css",
+              "5bf4cdf735d044c23562b14dd4c280613abc0fa0",
+              null
+            ],
+            [
+              "dist/version.json",
+              "version.json",
+              "b5541c54b051ae3282bd46d52f36f2191488fa09",
+              "e0bd2fa675e989d6b2073febe0e202dc73094777"
+            ],
+            [
+              "docs/DIRECTION-ARTISTIQUE.md",
+              "DIRECTION-ARTISTIQUE.md",
+              "631b64006b9152fc134b1643de082fb592a6564e",
+              null
+            ],
+            [
+              "docs/INTERFACE-JEU.md",
+              "INTERFACE-JEU.md",
+              "82ec66a318c6b7e459b6c99d0711e06ed4a1a191",
+              null
+            ],
+            [
+              "scripts/build.cjs",
+              "build.cjs",
+              "3abea7415a546e5536cfa4ceb2e89059cafcd9d6",
+              "63707966b787c036a4c87c705da8095b6be55b4e"
+            ],
+            [
+              "tests/game-board-ui.test.cjs",
+              "game-board-ui.test.cjs",
+              "5e6c7b7e7f0e7ea5ca3bd89ede9d935ff1613a19",
+              null
+            ],
+            [
+              "tests/i18n.test.cjs",
+              "i18n.test.cjs",
+              "4bc9f259ae8d33393bc9a793fa1fead078bd1296",
+              "2af665e46f7aad275f1c6e3c5c81b653eade1217"
+            ],
+            [
+              "tests/match.test.cjs",
+              "match.test.cjs",
+              "181f56bee14cf452d959b0a8b004666cc6ee73c2",
+              "1565579feb8d96254e1a1cb7db56ea57a0fbf332"
+            ],
+            [
+              "tests/peer.test.cjs",
+              "peer.test.cjs",
+              "23b2e928a2eb0ad2b7a0697e364638cbb62965a6",
+              "2acc3e8e63b7d089d3ce85cff87614b345f5c4cb"
+            ],
+            [
+              "tests/table.test.cjs",
+              "table.test.cjs",
+              "d6f9d4ffa1d50ac4bafb758fe841de3c909b15cb",
+              "d7436457981fbbc8d9dbc888fc6e943a61094d68"
+            ],
+            [
+              "tests/turn-automation.test.cjs",
+              "turn-automation.test.cjs",
+              "8cabee344a1835edef6610c59c33d267440839ee",
+              null
+            ]
+          ];
+          function blobSha(file) {
+            if (!fs.existsSync(file)) return null;
+            const bytes = fs.readFileSync(file);
+            return crypto.createHash('sha1')
+              .update(Buffer.from('blob ' + bytes.length + '\0'))
+              .update(bytes).digest('hex');
+          }
+          const planned = [];
+          let current = 0;
+          let preserved = 0;
+          for (const [target, source, expected, obsolete] of files) {
+            const actual = blobSha(target);
+            if (actual === expected) { current++; continue; }
+            if (actual !== null && actual !== obsolete) {
+              console.log('Preserved later edit: ' + target);
+              preserved++;
+              continue;
+            }
+            if (blobSha(source) !== expected) {
+              throw new Error('Repair source missing or changed: ' + source + ' -> ' + target);
+            }
+            planned.push([target, source]);
+          }
+          // Validate every required source before changing any checkout file.
+          for (const [target, source] of planned) {
+            fs.mkdirSync(path.dirname(target), { recursive: true });
+            fs.copyFileSync(source, target);
+            console.log('Restored: ' + target);
+          }
+          console.log('0.5.1 repair: ' + planned.length + ' restored, ' + current + ' already correct, ' + preserved + ' later edits preserved.');
+          
+          NODE
+
       - name: Tester le jeu
         run: node --test tests/*.test.cjs
 
