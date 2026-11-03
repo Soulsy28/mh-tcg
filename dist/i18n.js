@@ -4,6 +4,7 @@
   const STORAGE_KEY = 'mh-tcg.language';
   const translations = Object.fromEntries(`
 Arc|Bow
+Silas : soigner un allié|Silas: heal an ally
 Accueil|Home
 Bibliothèque|Card library
 Jouer|Play
