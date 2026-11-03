@@ -4,6 +4,58 @@ const assert=require('node:assert/strict');
 const I=require('../dist/i18n.js');
 const catalog=require('../dist/catalog.js');
 
+test('le carnet traduit les quantités piochées, les rations et les paiements détaillés',()=>{
+  const language=I.create({storage:null,document:null});language.setLanguage('en');
+  assert.equal(language.t('Alice pioche 1 carte.'),'Alice draws 1 card.');
+  assert.equal(language.t('Alice pioche 5 cartes.'),'Alice draws 5 cards.');
+  assert.equal(language.t('Alice ajoute 2 rations engagées depuis sa réserve.'),'Alice adds 2 tapped rations from their reserve.');
+  assert.equal(language.t('Alice dégage 3 rations au début du tour.'),'Alice untaps 3 rations at the start of the turn.');
+  assert.equal(language.t('Alice paie [3] : 2 ration(s) engagée(s), [1] ressource(s) temporaire(s).'),'Alice pays [3]: 2 rations tapped, [1] temporary resource.');
+  assert.equal(language.t('Alice ne peut pas ajouter de ration : sa réserve est vide.'),'Alice cannot add a ration: their reserve is empty.');
+  assert.equal(language.t('Alice ne peut pas ajouter 2 rations : sa réserve est vide.'),'Alice cannot add 2 rations: their reserve is empty.');
+  assert.equal(language.t('Alice Mange 1 ration (retour dans la réserve).'),'Alice Eats 1 ration (returned to the reserve).');
+  assert.equal(language.t('Alice termine son tour.'),'Alice ends their turn.');
+});
+
+test('la pile traduit les annonces, résolutions, réponses et coûts sans changer les noms protégés',()=>{
+  const i=I.create({storage:null,document:null});i.setLanguage('en');
+  // Le plateau protège les pseudos par ces marqueurs avant d’appeler t().
+  const name='\uE0000\uE001';
+  assert.equal(i.t(`${name} joue Potion. La carte est ajoutée à la pile.`),`${name} plays Potion. The card is added to the stack.`);
+  assert.equal(i.t(`${name} active Jumelles de terrain. L’effet est ajouté à la pile.`),`${name} activates Jumelles de terrain. The effect is added to the stack.`);
+  assert.equal(i.t(`${name} déclare un déclenchement de Ellie. L’effet est ajouté à la pile.`),`${name} declares a trigger from Ellie. The effect is added to the stack.`);
+  assert.equal(i.t('Résolution : Capacité : Jumelles de terrain.'),'Resolving: Ability: Jumelles de terrain.');
+  assert.equal(i.t('Résolution manuelle terminée : Déclenchement : Ellie.'),'Manual resolution finished: Trigger: Ellie.');
+  assert.equal(i.t('Capacité : Rathian est contrée. Les coûts payés ne sont pas remboursés.'),'Ability: Rathian is countered. Paid costs are not refunded.');
+  assert.equal(i.t('Contrer : Capacité : Rathian (effet manuel)'),'Counter: Ability: Rathian (manual effect)');
+  assert.equal(i.t('Passer — laisser résoudre'),'Pass — allow resolution');
+  assert.equal(i.t('Terminer la résolution manuelle'),'Finish manual resolution');
+  assert.equal(i.t('Chasseur ennemi engagé : Ellie, aiguiseuse d’arme'),'Tapped enemy Hunter: Ellie, aiguiseuse d’arme');
+  assert.equal(i.t('Ajouter 1 marqueur Spirituel'),'Add 1 Spirit counter');
+  assert.equal(i.t('Retirer 1 marqueur Quête'),'Remove 1 Quest counter');
+  assert.equal(i.t('Confirmer : [2], Manger 1, engager cette carte, retirer 2 Chaleur, sacrifier Vivian, Le gourmand, conditions vérifiées'),'Confirm: [2], Eat 1, tap this card, remove 2 Heat counters, sacrifice Vivian, Le gourmand, conditions checked');
+  assert.equal(i.t('Confirmer : renvoyer cette carte en main, conditions vérifiées'),'Confirm: return this card to hand, conditions checked');
+  assert.equal(i.t('Confirmer : conditions vérifiées'),'Confirm: conditions checked');
+  assert.equal(i.t(`${name} paie le coût : défausse Potion.`),`${name} pays the cost: discards Potion.`);
+  assert.equal(i.t(`${name} : score ajusté manuellement à 5.`),`${name}: score manually adjusted to 5.`);
+  assert.equal(i.t('Jumelles de terrain rejoint la défausse après sa résolution.'),'Jumelles de terrain goes to the discard pile after resolving.');
+  assert.equal(i.t('Ellie arrive engagé. Déclarez ses déclenchements éventuels manuellement.'),'Ellie enters tapped. Declare any triggers manually.');
+});
+
+test('les confirmations de la table et les erreurs de flèche ou de réseau sont lisibles en anglais et réversibles',()=>{
+  const i=I.create({storage:null,document:null});
+  const source='Résolvez cet effet manuellement avec les outils, puis terminez sa résolution.';
+  i.setLanguage('en');
+  assert.equal(i.t(source),'Resolve this effect manually using the tools, then finish its resolution.');
+  assert.equal(i.t('Texte canonique conservé\nTable libre : vérifiez manuellement les conditions, les cibles et les éventuels coûts complémentaires. L’effet sera résolu manuellement après les réponses.'),'Texte canonique conservé\nFree table: manually check conditions, targets and any additional costs. Resolve the effect manually after responses.');
+  assert.equal(i.t('Confirmer que ce déclenchement a eu lieu et que ses conditions sont remplies'),'Confirm that this trigger occurred and its conditions are met');
+  assert.equal(i.t('Efface tes flèches avant d’en ajouter : six flèches maximum par joueur.'),'Clear your arrows before adding more: up to six arrows per player.');
+  assert.equal(i.t('L’hôte n’a pas confirmé cette action. Vérifie la connexion avant de réessayer.'),'The host did not confirm this action. Check the connection before trying again.');
+  assert.equal(i.t('constructor'), 'constructor');
+  assert.equal(i.t('<img src=x onerror=alert(1)> active Potion. L’effet est ajouté à la pile.'),'<img src=x onerror=alert(1)> activates Potion. The effect is added to the stack.','la traduction conserve les données et ne les interprète jamais comme du HTML');
+  i.setLanguage('fr');assert.equal(i.t(source),source);
+});
+
 test('un texte ressemblant à une propriété JavaScript reste un texte',()=>{
   const language=I.create({storage:null,document:null});
   language.setLanguage('en');
