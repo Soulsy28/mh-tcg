@@ -350,6 +350,7 @@ Passer — laisser résoudre|Pass — allow resolution
 Passer — terminer le tour|Pass — end the turn
 Passer — poursuivre le combat|Pass — continue combat
 Continuer : +1 ration et piocher 1 carte|Continue: +1 ration and draw 1 card
+Continuer : ration et pioche automatiques|Continue: automatic ration and draw
 Après avoir résolu les capacités de début de tour manuellement.|After manually resolving start-of-turn abilities.
 Mise sur le terrain par un effet : les coûts et capacités sont résolus manuellement.|Put onto the field by an effect: resolve costs and abilities manually.
 Choisissez le Chasseur à remplacer. Il ne meurt pas de ce remplacement.|Choose the Hunter to replace. This replacement does not kill it.
@@ -423,6 +424,13 @@ Le deck de|The deck of
 remporte la chasse|wins the hunt
 Défausse ·|Discard ·
 Partie créée. Chaque joueur choisit de garder sa main ou de faire un mulligan.|Game created. Each player chooses whether to keep their hand or take a mulligan.
+Chaque joueur peut garder sa main ou effectuer un mulligan.|Each player may keep their hand or take a mulligan.
+Table libre : effets des cartes, mots-clés conditionnels et coûts supplémentaires à résoudre manuellement.|Free table: resolve card effects, conditional keywords and additional costs manually.
+Résolvez les capacités de début de tour manuellement, puis continuez pour ajouter une ration et piocher.|Resolve start-of-turn abilities manually, then continue to add a ration and draw.
+Début du tour · Réponses|Turn begins · Responses
+Fin du tour · Réponses|Turn ends · Responses
+Résous les effets de début du tour. Tu peux jouer un Réflexe ou passer pour continuer.|Resolve start-of-turn effects. You may play a Reflex or pass to continue.
+Une fenêtre de réponse est ouverte. Tu peux jouer un Réflexe ou passer pour continuer.|A response window is open. You may play a Reflex or pass to continue.
 Fin du combat.|End of combat.
 Fin de tour annoncée : les deux joueurs peuvent répondre.|End of turn announced: both players may respond.
 Une ration est ajoutée et une carte est piochée.|One ration is added and one card is drawn.
@@ -443,6 +451,51 @@ Choisis un Chef de chasse valide.|Choose a valid Hunting Chief.
 Choisis un Chef de chasse valide, séparé des 50 cartes du deck.|Choose a valid Hunting Chief, separate from the 50-card deck.
 La liste de cartes du deck est invalide.|The deck's card list is invalid.
 Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automatisés. Il reste utilisable en mode manuel.|This deck contains a Chief or cards whose effects are not automated yet. It can still be played in manual mode.
+Confirmer que ce déclenchement a eu lieu et que ses conditions sont remplies|Confirm that this trigger occurred and its conditions are met
+Confirmer : conditions vérifiées|Confirm: conditions checked
+Résolvez cet effet manuellement avec les outils, puis terminez sa résolution.|Resolve this effect manually using the tools, then finish its resolution.
+Choisissez le Chasseur à remplacer avant cette arrivée.|Choose the Hunter to replace before this card enters.
+Choisir le Chasseur à remplacer|Choose the Hunter to replace
+Terminer la résolution manuelle|Finish manual resolution
+Seulement si le texte en cours de résolution permet de contrer cet élément.|Only if the effect being resolved allows this element to be countered.
+La carte va dans la pile. Coût imprimé seulement ; vérifiez manuellement ses conditions et coûts supplémentaires.|The card goes on the stack. Printed cost only; manually check its conditions and additional costs.
+Table libre : vérifiez manuellement les conditions, les cibles et les éventuels coûts complémentaires. L’effet sera résolu manuellement après les réponses.|Free table: manually check conditions, targets and any additional costs. Resolve the effect manually after responses.
+Le combat est interrompu : un participant quitte le terrain.|Combat is interrupted: a participant leaves the field.
+Le jeton quitte le terrain et cesse d’exister.|The token leaves the field and ceases to exist.
+Chasseur ennemi engagé|Tapped enemy Hunter
+Chasseur ennemi|Enemy Hunter
+Chasseur ennemi de Force 2 ou moins|Enemy Hunter with Strength 2 or less
+Chasseur Lance allié|Allied Lance Hunter
+Chasseur allié|Allied Hunter
+Chasseur ennemi attaquant|Attacking enemy Hunter
+Chasseur ou Monstre ennemi|Enemy Hunter or Monster
+Monstre allié|Allied Monster
+Autre Petit Monstre allié|Another allied Small Monster
+Objet persistant allié|Allied persistent Item
+Cible à vérifier manuellement|Target to check manually
+Chaleur|Heat
+Spirituel|Spirit
+Quête|Quest
+Action invalide.|Invalid action.
+Cette action n’est pas autorisée pour ce joueur ou cette carte.|This action is not allowed for this player or card.
+Choisissez les cibles légales demandées.|Choose the required legal targets.
+Choisissez une cible légale pour chaque groupe demandé.|Choose a legal target for each required group.
+Choisissez une option proposée.|Choose one of the available options.
+La table n’est plus ouverte.|The game is no longer open.
+La table n’est pas encore prête.|The game is not ready yet.
+La demande de jeu est invalide.|The game request is invalid.
+L’état de partie reçu est invalide.|The received game state is invalid.
+Une action attend déjà la réponse de l’hôte.|An action is already waiting for the host’s response.
+L’hôte n’a pas confirmé cette action. Vérifie la connexion avant de réessayer.|The host did not confirm this action. Check the connection before trying again.
+Cette action a été refusée par l’hôte.|The host refused this action.
+La connexion a été interrompue avant confirmation de l’action.|The connection was interrupted before the action was confirmed.
+Le joueur qui trace une flèche est invalide.|The player drawing an arrow is invalid.
+L’annotation demandée est invalide.|The requested annotation is invalid.
+Choisis deux cartes publiques différentes pour tracer une flèche.|Choose two different public cards to draw an arrow.
+Les flèches relient uniquement des cartes publiques du terrain ou de la pile.|Arrows can only connect public cards on the field or stack.
+Efface tes flèches avant d’en ajouter : six flèches maximum par joueur.|Clear your arrows before adding more: up to six arrows per player.
+Le nombre maximal d’annotations a été atteint.|The maximum number of annotations has been reached.
+Cette action utilise une ancienne version de la partie. Attends la mise à jour du plateau.|This action uses an older game state. Wait for the board to update.
 `.trim().split('\n').map(line => { const split=line.indexOf('|'); return [line.slice(0,split),line.slice(split+1)]; }));
 
   const patterns = [
@@ -478,6 +531,15 @@ Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automa
     [/^Choisis de (\d+) à (\d+) cibles\.$/, (a,b)=>`Choose between ${a} and ${b} targets.`],
     [/^Couleur (.+)$/, value=>`Color ${translate(value)}`],
     [/^Lire (.+)$/, value=>`Read ${value}`],
+    [/^(.+) est contrée\. Les coûts payés ne sont pas remboursés\.$/, entry=>`${translate(entry)} is countered. Paid costs are not refunded.`],
+    [/^Activer : (.+)$/, value=>`Activate: ${value}`],
+    [/^Déclarer le déclenchement : (.+)$/, value=>`Declare trigger: ${value}`],
+    [/^Déclenchement : (.+)$/, value=>`Trigger: ${value}`],
+    [/^Contrer : (.+) \(effet manuel\)$/, value=>`Counter: ${translate(value)} (manual effect)`],
+    [/^Ajouter 1 marqueur (.+)$/, marker=>`Add 1 ${translate(marker)} counter`],
+    [/^Retirer 1 marqueur (.+)$/, marker=>`Remove 1 ${translate(marker)} counter`],
+    [/^Confirmer : (.+), conditions vérifiées$/, costs=>`Confirm: ${translateCosts(costs)}, conditions checked`],
+    [/^(Chasseur ennemi engagé|Chasseur ennemi|Chasseur ennemi de Force 2 ou moins|Chasseur Lance allié|Chasseur allié|Chasseur ennemi attaquant|Chasseur ou Monstre ennemi|Monstre allié|Autre Petit Monstre allié|Objet persistant allié|Cible à vérifier manuellement) : (.+)$/, (kind,name)=>`${translate(kind)}: ${name}`],
     [/^Ajouter (.+)$/, value=>`Add ${value}`],
     [/^Retirer (.+)$/, value=>`Remove ${value}`],
     [/^Jouer (.+)$/, value=>`Play ${value}`],
@@ -504,6 +566,19 @@ Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automa
     ,[/^PV ([^·]+)$/, n=>`HP ${n}`]
     ,[/^Force ([^·]+)$/, n=>`Strength ${n}`]
     ,[/^contient (\d+) cartes\. Son ordre reste caché\.$/, n=>`contains ${n} cards. Its order remains hidden.`]
+    ,[/^(.+) joue (.+)\. La carte est ajoutée à la pile\.$/, (name,card)=>`${name} plays ${card}. The card is added to the stack.`]
+    ,[/^(.+) active (.+)\. L’effet est ajouté à la pile\.$/, (name,card)=>`${name} activates ${card}. The effect is added to the stack.`]
+    ,[/^(.+) déclare un déclenchement de (.+)\. L’effet est ajouté à la pile\.$/, (name,card)=>`${name} declares a trigger from ${card}. The effect is added to the stack.`]
+    ,[/^(.+) arrive (engagé|dégagé)\. Déclarez ses déclenchements éventuels manuellement\.$/, (card,tap)=>`${card} enters ${tap==='engagé'?'tapped':'untapped'}. Declare any triggers manually.`]
+    ,[/^Résolution manuelle terminée : (.+)\.$/, entry=>`Manual resolution finished: ${translate(entry)}.`]
+    ,[/^(.+) rejoint la défausse après sa résolution\.$/, card=>`${card} goes to the discard pile after resolving.`]
+    ,[/^(.+) paie le coût : (engage|défausse|sacrifie) (.+)\.$/, (name,kind,card)=>`${name} pays the cost: ${{engage:'taps',défausse:'discards',sacrifie:'sacrifices'}[kind]} ${card}.`]
+    ,[/^(.+) est remplacé sans mourir\.$/, card=>`${card} is replaced without dying.`]
+    ,[/^(.+) gagne 1 point\.$/, name=>`${name} gains 1 point.`]
+    ,[/^(.+) atteint 6 points et gagne la partie\.$/, name=>`${name} reaches 6 points and wins the game.`]
+    ,[/^(.+) : score ajusté manuellement à (\d+)\.$/, (name,score)=>`${name}: score manually adjusted to ${score}.`]
+    ,[/^(.+) : (\d+) marqueur\(s\) (.+)\.$/, (card,n,marker)=>`${card}: ${n} ${translate(marker)} counter${n==='1'?'':'s'}.`]
+    ,[/^(.+) joue (.+)\. Résolvez le texte manuellement\.$/, (name,card)=>`${name} plays ${card}. Resolve its text manually.`]
     ,[/^(.+) joue (.+)\.$/, (name,card)=>`${name} plays ${card}.`]
     ,[/^(.+) active (.+)\.$/, (name,card)=>`${name} activates ${card}.`]
     ,[/^(.+) défausse (.+)\.$/, (name,card)=>`${name} discards ${card}.`]
@@ -517,17 +592,38 @@ Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automa
     ,[/^(.+) gagne 1 point \((\d+)\/6\)\.$/, (name,n)=>`${name} gains 1 point (${n}/6).`]
     ,[/^(.+) remporte la partie avec 6 points !$/, name=>`${name} wins the game with 6 points!`]
     ,[/^(.+) ne peut plus piocher et perd la partie\.$/, name=>`${name} cannot draw and loses the game.`]
+    ,[/^(.+) pioche (\d+) cartes?\.$/, (name,n)=>`${name} draws ${n} card${n==='1'?'':'s'}.`]
+    ,[/^(.+) paie \[(\d+)\] : (\d+) ration\(s\) engagée\(s\), \[(\d+)\] ressource\(s\) temporaire\(s\)\.$/, (name,cost,rations,pool)=>`${name} pays [${cost}]: ${rations} ration${rations==='1'?'':'s'} tapped, [${pool}] temporary resource${pool==='1'?'':'s'}.`]
+    ,[/^(.+) ajoute (\d+) rations? (engagées?|dégagées?) depuis sa réserve\.$/, (name,n,tap)=>`${name} adds ${n} ${tap.startsWith('engagée')?'tapped':'untapped'} ration${n==='1'?'':'s'} from their reserve.`]
+    ,[/^(.+) ne peut pas ajouter (?:de ration|(\d+) rations?) : sa réserve est vide\.$/, (name,n)=>`${name} cannot add ${n?`${n} ration${n==='1'?'':'s'}`:'a ration'}: their reserve is empty.`]
+    ,[/^(.+) dégage (\d+) rations? au début du tour\.$/, (name,n)=>`${name} untaps ${n} ration${n==='1'?'':'s'} at the start of the turn.`]
+    ,[/^(.+) remet sa main dans son deck pour un mulligan\.$/, name=>`${name} returns their hand to their deck for a mulligan.`]
+    ,[/^(.+) mélange son deck après le mulligan\.$/, name=>`${name} shuffles their deck after the mulligan.`]
+    ,[/^(.+) Mange (\d+) rations? \(retour dans la réserve\)\.$/, (name,n)=>`${name} Eats ${n} ration${n==='1'?'':'s'} (returned to the reserve).`]
+    ,[/^(.+) termine son tour\.$/, name=>`${name} ends their turn.`]
     ,[/^(.+) mélange son deck\.$/, name=>`${name} shuffles their deck.`]
     ,[/^(.+) (engage|dégage) 1 ration\.$/, (name,tap)=>`${name} ${tap==='engage'?'taps':'untaps'} 1 ration.`]
     ,[/^(.+) Mange 1 ration\.$/, name=>`${name} Eats 1 ration.`]
     ,[/^(.+) ajoute 1 ration (engagée|dégagée)\.$/, (name,tap)=>`${name} adds 1 ${tap==='engagée'?'tapped':'untapped'} ration.`]
     ,[/^Tour (\d+) — (.+)\.$/, (n,name)=>`Turn ${n} — ${name}.`]
-    ,[/^Résolution : (.+)\.$/, label=>`Resolving: ${label}.`]
+    ,[/^Résolution : (.+)\.$/, label=>`Resolving: ${translate(label)}.`]
     ,[/^(.+) subit (\d+) blessures? (de combat|d’effet)\.$/, (name,n,kind)=>`${name} takes ${n} ${kind==='de combat'?'combat':'effect'} damage.`]
     ,[/^(.+) s’interpose\.$/, name=>`${name} interposes.`]
     ,[/^(.+) s’interpose\. Aucune autre Interposition n’est autorisée\.$/, name=>`${name} interposes. No further Interposition is allowed.`]
     ,[/^(.+) est contrée\.$/, name=>`${name} is countered.`]
   ];
+  function translateCosts(costs) {
+    // Les noms de cartes peuvent contenir une virgule : seules les instructions
+    // reconnues sont remplacées ; les fragments de noms restent inchangés.
+    return costs.split(', ').map(part=>{
+      const known={'engager cette carte':'tap this card','sacrifier cette carte':'sacrifice this card','renvoyer cette carte en main':'return this card to hand'};
+      if(Object.hasOwn(known,part))return known[part];
+      let match=part.match(/^Manger (\d+)$/);if(match)return `Eat ${match[1]}`;
+      match=part.match(/^retirer (\d+) (.+)$/);if(match)return `remove ${match[1]} ${translate(match[2])} counter${match[1]==='1'?'':'s'}`;
+      match=part.match(/^(engager|défausser|sacrifier) (.+)$/);if(match)return `${{engager:'tap',défausser:'discard',sacrifier:'sacrifice'}[match[1]]} ${match[2]}`;
+      return part;
+    }).join(', ');
+  }
   function translate(text) {
     const source=String(text ?? '');
     const trimmed=source.trim();
@@ -541,6 +637,7 @@ Ce deck contient un Chef ou des cartes dont les effets ne sont pas encore automa
     }
     if (translated === undefined && trimmed.includes(' · ')) translated=trimmed.split(' · ').map(translate).join(' · ');
     if (translated === undefined && trimmed.includes(' / ')) translated=trimmed.split(' / ').map(translate).join(' / ');
+    if (translated === undefined && trimmed.includes('\n')) translated=trimmed.split('\n').map(translate).join('\n');
     if (translated === undefined) return source;
     return source.slice(0,source.indexOf(trimmed))+translated+source.slice(source.indexOf(trimmed)+trimmed.length);
   }
