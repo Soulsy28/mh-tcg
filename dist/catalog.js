@@ -1,7 +1,7 @@
 /* Generated from Liste Carte Propre in Google Drive. Do not edit generated card text. */
 (function(root){
   const catalogue = {
-  "version": "2026-11-01",
+  "version": "2026-11-03-silas202",
   "sources": {
     "cards": {
       "title": "Catalogue des cartes"
@@ -4944,9 +4944,9 @@
       "cost": null,
       "force": null,
       "hp": null,
-      "text": "[Une fois par tour] Quand un Chasseur allié avec au moins 1 blessure se dégage autrement que pendant une phase de début de tour, soignez 1 blessure à ce Chasseur.",
-      "textEn": "[Once per turn] When an allied Hunter with at least 1 damage untaps other than during a start-of-turn phase, heal 1 damage from that Hunter.",
-      "image": "assets/cards/202.webp",
+      "text": "[Une fois par tour] Quand vous Mangez ou renvoyez une carte du terrain dans la main de son propriétaire, soignez 1 blessure à un Chasseur ou un Monstre allié ciblé.",
+      "textEn": "[Once per turn] When you Eat or return a card from the field to its owner’s hand, heal 1 damage from a target allied Hunter or Monster.",
+      "image": "assets/cards/202-r2.webp",
       "source": {
         "paragraph": 2258,
         "startIndex": 100458,
