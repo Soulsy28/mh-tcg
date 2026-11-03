@@ -75,7 +75,17 @@ test('une sortie du terrain retire les flèches et conserve une copie publique d
   assert.equal(guest.stack.find(e=>e.uid===entry.uid).sourceCard.cardId,'124');
   assert(!JSON.stringify(guest).includes('"'+source.uid+'"'));assert(!JSON.stringify(guest).includes('sourceSnapshot'));
   match.apply(1,arrow('stack:'+entry.uid,to),2);assert.equal(match.state.arrows[0].from,'stack:'+entry.uid);
-  match.apply(0,{id:'pass'},3);match.apply(1,{id:'pass'},4);
+  // Le retour d'Eva est aussi le premier événement du nouveau Silas 202 :
+  // son soin ciblé doit être annoncé et résolu avant la capacité d'Eva.
+  assert.equal(match.state.pending.kind,'triggerTarget');assert.equal(match.state.pending.entry.kind,'silas');
+  const choice=match.viewFor(0).actions.find(action=>action.type==='choose');
+  assert(choice?.targets.length);assert(!choice.targets.some(target=>target.id===source.uid));
+  match.apply(0,{id:choice.id,type:'choose',targetIds:[choice.targets[0].id]},match.revision);
+  assert(!JSON.stringify(match.viewFor(1).state).includes('"'+source.uid+'"'));
+  match.apply(0,{id:'pass'},match.revision);match.apply(1,{id:'pass'},match.revision);
+  assert(match.state.stack.some(e=>e.uid===entry.uid),'La capacité d’Eva attend après le soin de Silas');
+  assert.equal(match.state.arrows[0].from,'stack:'+entry.uid,'La flèche reste attachée à sa véritable entrée');
+  match.apply(0,{id:'pass'},match.revision);match.apply(1,{id:'pass'},match.revision);
   assert(!match.state.stack.some(e=>e.uid===entry.uid));assert.deepEqual(match.state.arrows,[]);
 });
 
