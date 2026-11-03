@@ -1,4 +1,12 @@
-# Vérification de la version 0.6.0
+# Vérification de la version 0.6.1
+
+## Correction de Silas, carte 202
+
+Les deux illustrations fournies le 3 novembre 2026 remplacent les versions précédentes. Elles ont été converties en WebP sans perte : les 744 × 1039 pixels décodés correspondent exactement aux PNG. Les nouveaux noms de fichiers empêchent une ancienne illustration conservée en cache de réapparaître. L'identifiant 202 est conservé ; le catalogue possède une nouvelle version pour les parties utilisant cet effet corrigé.
+
+Le moteur automatisé déclenche maintenant le soin après Manger ou un retour du terrain dans la main du propriétaire, pour le joueur responsable de ce retour. Les deux événements partagent une seule utilisation par tour. Les Chasseurs et Monstres alliés sont des cibles légales, revérifiées à la résolution ; l'ancien soin après dégagement est supprimé. Les 215 tests passent, dont les nouveaux cas sur les deux événements, leur limite commune, les cibles, les changements de contrôle et les informations cachées après le retour d'Eva. La préparation du site valide toujours 203 cartes et 410 illustrations.
+
+Dans le navigateur, la recherche Silas ouvre la nouvelle carte et le texte corrigé. Le passage FR/EN charge respectivement `assets/cards/202-r2.webp` et `assets/cards/en/202-r2.webp`, deux images décodées à 744 × 1039. Les textes correspondent aux deux versions fournies.
 
 ## Pile, flèches et points
 
