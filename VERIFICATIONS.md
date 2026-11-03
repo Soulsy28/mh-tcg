@@ -1,6 +1,20 @@
-# Vérification de la version 0.5.1
+# Vérification de la version 0.6.0
+
+## Pile, flèches et points
+
+Le 3 novembre 2026, les 203 tests et la préparation du site passent. Les nouveaux cas couvrent l'ordre LIFO, les deux passages, les fenêtres de réponse renouvelées, les coûts d'activation, les sources qui quittent le terrain, les contres sans remboursement, la reprise en pleine résolution et les confirmations réseau corrélées. Ils vérifient aussi les copies publiques de pile, les cartes cachées, les annotations, les raccourcis clavier et les traductions des nouvelles commandes.
+
+Essai réel dans le navigateur : carte jouée dans la pile, résolution après deux passages, F + clic sur Eva, paiement par engagement et retour en main, copie grisée conservée, pause de résolution manuelle puis retrait de l'entrée. La flèche vers cette entrée est retirée avec elle. La version anglaise conserve la même partie et utilise les illustrations anglaises ; certaines descriptions avancées conservent leur clause canonique française, avec confirmation et aperçu de carte traduits.
+
+Deux navigateurs reliés par WebRTC en mode réseau local ont partagé les mains de départ, une carte jouée, les passages, une copie de déclenchement, sa résolution manuelle, les rations et les scores. Les flèches se partagent dans deux couleurs, même hors priorité ; chaque camp n'efface que les siennes. Aucune erreur de console n'a été observée. Ce test local ne prétend pas valider une liaison entre deux réseaux Internet distincts.
+
+À 390 px, le bandeau conserve les deux scores lisibles et la page ne déborde pas horizontalement ; le terrain et les étapes gardent leur défilement dédié. Le raccourci a été testé avec la touche F effectivement maintenue pendant le clic, puis en anglais. Les 410 illustrations de cartes restent présentes et validées.
 
 Vérifications du 2 novembre 2026.
+
+Accueil aléatoire vérifié le 3 novembre 2026 : trois images distinctes chargées ; aller-retour à la bibliothèque et bascule FR/EN conservent les trois identifiants et leur ordre ; les noms et images sont traduits. Une actualisation produit un nouveau tirage. Aucun changement de disposition, aucun nouveau stockage ni appel réseau de tirage. Les 161 tests existants et la préparation du site passent.
+
+Publication vérifiée le 3 novembre 2026 : le workflow rétablit dans son dossier de construction les 24 fichiers de la mise à jour 0.5.1 envoyés à la racine du dépôt. La réparation compare les empreintes exactes, valide toutes les sources avant copie et préserve toute édition ultérieure à son emplacement normal. Sur une copie exacte des 475 fichiers distants, les 161 tests et la préparation passent. La publication GitHub Actions [41660360597](https://github.com/Soulsy28/mh-tcg/actions/runs/41660360597), commit `b7a2ff93170ad35aa90ce91f6e163f1bed24314d`, réussit. Le site GitHub Pages a été ouvert dans Chrome : `play.css` et `theme.css` chargés, accueil complet avec nouveau thème, aucune erreur de console. Le lien portant `?v=b7a2ff9` renouvelle la page conservée en cache. Les copies déposées à la racine restent dans le dépôt ; leur remise aux chemins attendus se fait dans la construction publiée.
 
 Version 0.5.1 : habillage visuel ajouté dans une feuille séparée, textures SVG originales locales, boutons et panneaux harmonisés. Comparaison des fichiers : les douze modules JavaScript et les quatre feuilles de structure sont identiques à la version 0.5. Les 161 tests existants passent et la préparation vérifie aussi la présence des deux textures. L’accueil, la galerie des Chefs, la reprise d’une partie, les états de sélection et les libellés FR/EN ont été inspectés dans le navigateur. À 390 px, l’accueil et le builder ne débordent pas horizontalement ; la commande mobile du deck reste disponible. Les références officielles et les choix de contraste sont décrits dans `docs/DIRECTION-ARTISTIQUE.md`.
 
