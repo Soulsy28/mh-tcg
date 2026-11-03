@@ -1,7 +1,7 @@
 {
   "app": "mh-tcg-guilde",
-  "version": "0.4.0",
-  "builtAt": "2026-11-02T20:07:07.086Z",
+  "version": "0.6.0",
+  "builtAt": "2026-11-03T19:48:49.768Z",
   "deployment": "static",
   "catalogVersion": "2026-11-01",
   "sources": {
