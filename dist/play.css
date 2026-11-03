@@ -1,0 +1,237 @@
+/* Table de jeu : priorité à la lisibilité, sans réduire les cartes sur mobile. */
+.site-main.play-workspace{max-width:1920px;padding:22px 24px 38px}
+.play-workspace .match-top{font-size:13px;margin-bottom:12px}
+.play-workspace .manual-notice{font-size:12px;line-height:1.6;padding:10px 14px;margin-bottom:6px}
+.game-mount{min-width:0}
+.game-mount .topline{padding:18px 0 20px;gap:20px}
+.game-mount .topline h1{font-size:28px}
+.game-mount .topline p{font-size:13px;line-height:1.5}
+.game-mount .button{font-size:13px;padding:10px 14px;min-height:40px}
+.game-mount .game-layout{grid-template-columns:minmax(0,1fr) 330px;gap:20px;padding:0;align-items:start}
+.game-mount .board{min-width:0;overflow:hidden;border-radius:12px}
+.game-mount .board-meta{padding:14px 18px;font-size:12px;flex-wrap:wrap;gap:8px}
+.game-mount .turn-mark{gap:8px;flex-wrap:wrap}
+.game-mount .phase-track{display:flex;align-items:stretch;gap:0;background:#18382d;border-bottom:1px solid #c8b5763a;overflow-x:auto;padding:10px 12px;scrollbar-width:thin}
+.game-mount .phase-step{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 9px;color:#a5b7aa;font-size:12px;white-space:nowrap;border-radius:6px}
+.game-mount .phase-step b{display:grid;place-items:center;width:23px;height:23px;border:1px solid #9fb49460;border-radius:50%;font-size:11px;font-weight:500}
+.game-mount .phase-step.current{color:#fff1c5;background:#cdb4771b;font-weight:650}
+.game-mount .phase-step.current b{background:#d9bd7a;color:#193c2b;border-color:#d9bd7a}
+.game-mount .phase-step.completed b{color:#c4d6b6;border-color:#aec39180}
+.game-mount .board-scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#a9b693 #233f32}
+.game-mount .player-zone,.game-mount .arena{min-width:810px}
+.game-mount .player-zone{padding:16px 20px 13px}
+.game-mount .player-heading{margin-bottom:13px;gap:14px}
+.game-mount .player-name{font-size:15px;gap:10px}
+.game-mount .player-name em{font-size:10px;letter-spacing:.5px;padding:4px 7px}
+.game-mount .avatar{width:31px;height:31px;font-size:12px}
+.game-mount .score{font-size:27px}
+.game-mount .score span{font-size:12px}
+.game-mount .player-body{grid-template-columns:106px minmax(0,1fr) 137px;gap:18px;align-items:start}
+.game-mount .zone-caption{font-size:10px;line-height:1.4;letter-spacing:1px;min-height:16px;margin-bottom:8px}
+.game-mount .chief-slot{gap:0}
+.game-mount .camp-area{border:1px solid transparent;border-radius:9px;padding:0 3px 5px;transition:background .15s,border-color .15s}
+.game-mount .camp-slots{justify-content:flex-start;gap:10px;min-height:145px;flex-wrap:nowrap}
+.game-mount .empty-slot{width:96px;height:138px;flex:0 0 96px;font-size:29px;border-color:#b8c89e3c;border-radius:7px}
+.game-mount .game-card{width:102px;border-radius:7px;flex:0 0 102px;touch-action:pan-y}
+.game-mount .game-card img{border-radius:5px}
+.game-mount .game-card:hover,.game-mount .game-card:focus-visible{z-index:4;transform:translateY(-5px);border-color:#e9ca7b}
+.game-mount .game-card.tapped{transform:rotate(10deg);margin:0 7px}
+.game-mount .game-card.tapped:hover{transform:rotate(10deg) translateY(-5px)}
+.game-mount .card-tap-label{font-size:10px;line-height:1.6}
+.game-mount .card-stats{padding:4px 6px;font-size:12px}
+.game-mount .card-counters{font-size:11px;max-width:95%;overflow-wrap:anywhere}
+.game-mount .owner-pip{font-size:9px;padding:3px 5px;bottom:-10px}
+.game-mount .item-row{gap:12px;margin-top:12px}
+.game-mount .item-row .game-card{width:85px;flex-basis:85px}
+.game-mount .small-stacks{gap:14px;justify-content:flex-end}
+.game-mount .deck-controls{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:65px}
+.game-mount .card-back{width:57px;height:80px;border-width:2px;border-radius:6px;font-size:27px;box-shadow:3px 3px 0 #142b20,5px 5px 0 #74815b}
+.game-mount .stack-button{font-size:10px;line-height:1.4;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:53px}
+.game-mount .stack-button span{margin-top:5px}
+.game-mount .stack-button small{max-width:74px;font-size:10px;line-height:1.4;color:#f0da9e}
+.game-mount .stack-button.draw-available .card-back{border-color:#e6c774;box-shadow:0 0 0 3px #d7b56d25,3px 3px 0 #132d21}
+.game-mount .stack-button:hover .card-back{filter:brightness(1.2)}
+.game-mount .tiny-button{font-size:11px;line-height:1.4;min-height:30px;padding:5px 7px}
+.game-mount .deck-info-button{font-size:10px;padding:3px}
+.game-mount .ration-zone{margin-top:15px;padding-top:10px;border-top:1px solid #c8d3ae26}
+.game-mount .ration-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#d8d4ab;font-size:12px;margin-bottom:9px;line-height:1.5}
+.game-mount .ration-heading strong{color:#f1e2b8}
+.game-mount .ration-layout{display:flex;align-items:center;gap:20px;min-height:72px}
+.game-mount .ration-reserve{position:relative;flex:0 0 51px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#c3c8a8;font-size:10px}
+.game-mount .ration-reserve img{display:block;width:40px;aspect-ratio:530/739;object-fit:cover;border-radius:4px;border:1px solid #ab8d51;box-shadow:2px 2px 0 #263b2b,3px 3px 0 #9a8753,5px 5px 0 #263b2b}
+.game-mount .ration-reserve.empty{opacity:.45}
+.game-mount .ration-cards{display:flex;flex:1;flex-wrap:wrap;align-items:center;gap:9px 13px;min-height:64px}
+.game-mount .ration-card{position:relative;display:block;flex:0 0 41px;width:41px;height:58px;transition:transform .2s,opacity .2s}
+.game-mount .ration-card img{display:block;width:100%;height:100%;object-fit:cover;border-radius:4px;border:1px solid #cbb078;box-shadow:0 2px 4px #0005}
+.game-mount .ration-card.spent{transform:rotate(90deg);margin:0 8px;opacity:.62}
+.game-mount .ration-card.spent:after{content:'↷';position:absolute;inset:0;display:grid;place-items:center;color:#ffe4a3;text-shadow:0 1px 3px #000;font-size:21px}
+.game-mount .ration-empty{font-size:12px;color:#a7b99a}
+.game-mount .arena{padding:15px 20px 20px;min-height:200px;transition:background .15s,border-color .15s}
+.game-mount .arena-heading{font-size:12px;letter-spacing:1px;margin-bottom:12px}
+.game-mount .arena-cards{min-height:150px;gap:20px}
+.game-mount .arena-empty{min-height:148px;font-size:16px;gap:10px}
+.game-mount .arena-empty small{font-size:12px}
+.game-mount .arena-symbol{font-size:34px}
+.game-mount .hand-panel{padding:16px 20px 20px;min-height:218px}
+.game-mount .hand-heading{font-size:12px;gap:12px;margin-bottom:15px;flex-wrap:wrap}
+.game-mount .hand-heading select{font-size:12px;padding:5px 7px;max-width:240px}
+.game-mount .hand-cards{gap:12px;justify-content:flex-start;min-height:156px;padding:5px 0 0}
+.game-mount .hand-cards .game-card{width:115px;flex-basis:115px}
+.game-mount .hand-empty{font-size:13px;line-height:1.6;min-height:156px}
+.game-mount .hand-drag-hint{font-size:12px;color:#b2c4aa;line-height:1.6;margin-top:12px}
+.game-mount .play-dropzone{border:1px dashed #c9b77e60;border-radius:7px;padding:12px 14px;font-size:12px;color:#d8cfaa;text-align:center;line-height:1.5;margin-top:12px}
+.game-mount .play-dropzone strong{display:block;margin-bottom:4px}
+.game-mount .drop-hint{display:block;max-height:0;overflow:hidden;opacity:0;color:#f5dfa3;text-align:center;font-size:12px;line-height:1.5;transition:opacity .15s}
+.game-mount .drop-ready{outline:2px dashed #ddc283;outline-offset:-4px;background:#d3b36314}
+.game-mount .drop-ready .drop-hint{max-height:40px;opacity:1;padding-top:10px}
+.game-mount .drop-active{outline:3px solid #efce7e;outline-offset:-4px;background:#d9bf6b2b;box-shadow:inset 0 0 30px #dfc77722}
+.game-mount .playable-card{cursor:grab;touch-action:pan-y}
+.game-mount .game-card[data-game-draggable]{touch-action:none}
+.game-mount .playable-card:active{cursor:grabbing}
+.game-mount .game-card.dragging{opacity:.35;transform:none}
+.game-drag-ghost{position:fixed;z-index:10000;pointer-events:none;width:110px;opacity:.85;transform:rotate(-6deg);filter:drop-shadow(0 8px 10px #0007)}
+.game-drag-ghost img{display:block;width:100%;border-radius:7px}
+.game-mount .side-column{gap:14px;min-width:0;position:sticky;top:88px;height:calc(100dvh - 190px);max-height:calc(100dvh - 190px);overflow:hidden}
+.game-mount .game-command-column{display:flex;flex-direction:column;gap:14px;min-height:190px;flex:1;overflow-y:auto;scrollbar-width:thin;padding-right:2px}
+.game-mount .game-command-column>.side-panel{flex-shrink:0}
+.game-mount .side-panel{padding:18px;border-radius:10px}
+.game-mount .panel-title{font-size:14px;margin-bottom:12px;line-height:1.4}
+.game-mount .panel-title small{font-size:11px}
+.game-mount .inspector-panel{background:#faf9f3;border-color:#cec7ae;flex:0 1 auto;max-height:calc(100% - 204px);overflow-y:auto;scrollbar-width:thin}
+.game-mount .inspector-image{display:block;width:auto;max-width:100%;height:auto;max-height:33dvh;aspect-ratio:744/1039;object-fit:contain;border-radius:9px;margin:0 auto 14px;box-shadow:0 5px 16px #1c2a2424}
+.game-mount .inspector-name{font-size:17px;line-height:1.35;margin-bottom:7px;letter-spacing:0}
+.game-mount .inspector-meta{font-size:12px;line-height:1.6;color:#71806f;margin-bottom:10px}
+.game-mount .inspector-effect{font-size:14px;line-height:1.65;white-space:pre-line;color:#2e4336;overflow-wrap:anywhere}
+.game-mount .inspector-placeholder{min-height:240px;border:1px dashed #d6d6c2;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:26px 20px;color:#74806a}
+.game-mount .inspector-placeholder>span{font-size:55px;color:#b3a478}
+.game-mount .inspector-placeholder strong{font:21px Georgia,serif;color:#35503d}
+.game-mount .inspector-placeholder p{font-size:13px;line-height:1.7}
+.game-mount .actor-label{font-size:21px;margin:9px 0}
+.game-mount .action-description{font-size:13px;line-height:1.6;margin-bottom:14px}
+.game-mount .action-list{gap:8px;max-height:320px}
+.game-mount .action-button{font-size:13px;line-height:1.5;padding:11px 12px;min-height:42px}
+.game-mount .phase-pill{font-size:11px;padding:5px 8px}
+.game-mount .selection-title{font-size:14px;line-height:1.4;margin-top:16px;padding-top:15px}
+.game-mount .selection-title img{width:40px}
+.game-mount .table-tools{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.game-mount .table-tools summary{cursor:pointer;color:#526b51;font-size:13px;line-height:1.5;padding:5px 0}
+.game-mount .table-tools[open] summary{margin-bottom:8px}
+.game-mount .stack-entry{font-size:12px;padding:10px}
+.game-mount .stack-entry small{font-size:11px}
+.game-mount .history{max-height:290px;gap:12px}
+.game-mount .history-entry{font-size:12px;line-height:1.6;gap:10px;color:#687766}
+.game-mount .history-entry span{font-size:10px;min-width:20px}
+.game-mount .empty-note,.game-mount .tips{font-size:12px;line-height:1.65}
+.game-mount .tips strong{font-size:11px}
+.game-mount .card-preview{display:none}
+.mh-game-dialog{width:min(780px,calc(100vw - 32px));max-height:90dvh}
+.mh-game-dialog .button{min-height:40px;font-size:13px}
+.mh-game-dialog .modal-card-grid .game-card{width:110px}
+@media(min-width:1600px){
+  .game-mount .game-layout{grid-template-columns:minmax(0,1fr) 360px;gap:24px}
+  .game-mount .game-card{width:116px;flex-basis:116px}
+  .game-mount .player-body{grid-template-columns:120px minmax(0,1fr) 145px;gap:22px}
+  .game-mount .empty-slot{width:108px;flex-basis:108px;height:155px}
+  .game-mount .camp-slots{min-height:164px;gap:15px}
+  .game-mount .hand-cards .game-card{width:132px;flex-basis:132px}
+  .game-mount .inspector-image{max-width:322px}
+}
+@media(max-width:1100px){
+  .site-main.play-workspace{padding:18px 16px 30px}
+  .game-mount .game-layout{grid-template-columns:minmax(0,1fr) 290px;gap:14px}
+  .game-mount .side-panel{padding:15px}
+  .game-mount .phase-step{font-size:11px;padding:7px 6px}
+  .game-mount .phase-step b{width:20px;height:20px}
+}
+@media(max-width:950px){
+  .game-mount .game-layout{grid-template-columns:minmax(0,1fr)}
+  .game-mount .side-column{display:grid;grid-template-columns:290px minmax(0,1fr);position:static;height:auto;max-height:none;overflow:visible;padding:0;align-items:start}
+  .game-mount .game-command-column{display:contents}
+  .game-mount .inspector-panel{grid-column:1;grid-row:1 / span 4;position:sticky;top:90px;max-height:none}
+  .game-mount .game-command-column>.side-panel,.game-mount .game-command-column>.tips{grid-column:2}
+  .game-mount .topline{flex-wrap:wrap}
+  .game-mount .topline h1{font-size:25px}
+}
+@media(max-width:600px){
+  .site-main.play-workspace{padding:12px 10px 26px}
+  .game-mount .topline{padding:14px 0;gap:12px}
+  .game-mount .topline h1{font-size:23px}
+  .game-mount .topline p{font-size:12px}
+  .game-mount .toolbar{gap:6px}
+  .game-mount .toolbar .button{font-size:12px;padding:8px 10px}
+  .game-mount .board-meta{font-size:11px;padding:12px}
+  .game-mount .phase-track{padding:7px;gap:3px}
+  .game-mount .phase-step{font-size:11px;min-height:38px}
+  .game-mount .phase-step b{display:none}
+  .game-mount .hand-panel{padding:14px 12px}
+  .game-mount .hand-cards{gap:10px}
+  .game-mount .hand-cards .game-card{width:103px;flex-basis:103px}
+  .game-mount .hand-heading select{max-width:180px}
+  .game-mount .side-column{display:flex;position:static}
+  .game-mount .inspector-panel{position:static;max-height:none}
+  .game-mount .inspector-image{max-width:270px;max-height:none}
+  .game-mount .inspector-placeholder{min-height:210px}
+  .game-mount .action-list{max-height:280px}
+  .play-workspace .match-top{align-items:flex-start;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.game-mount *{scroll-behavior:auto;transition:none}}
+
+/* Le score, la pile et les indications communes sont visibles sur la table. */
+.game-mount .mh-game{position:relative}
+.game-mount .scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#192f34;border-bottom:2px solid #b89a5e}
+.game-mount .scoreboard-player{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 16px;padding:18px 22px;color:#eee5cb;min-width:0}
+.game-mount .scoreboard-player+ .scoreboard-player{border-left:1px solid #bba16855}
+.game-mount .scoreboard-player.active{background:linear-gradient(115deg,#bba06021,#bba0600a);box-shadow:inset 0 -3px 0 #d3b779}
+.game-mount .scoreboard-name{grid-column:1;font-size:15px;font-weight:650;line-height:1.4;overflow-wrap:anywhere;color:#f5ecd4}
+.game-mount .scoreboard-value{grid-column:2;grid-row:1 / span 2;font:700 48px/1 Georgia,'Times New Roman',serif;color:#f4d894;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 #0c1d24}
+.game-mount .scoreboard-value small{font:400 18px/1.2 'Segoe UI',sans-serif;color:#d9d3b9;text-shadow:none}
+.game-mount .scoreboard-goal{grid-column:1;font-size:12px;line-height:1.4;color:#d3d4bd}
+.game-mount .board .score{font-size:31px;font-weight:650;color:#f5dfa7}
+.game-mount .board .score span{font-size:12px;font-weight:400;color:#d1d0b8}
+.game-mount .board-tools{display:flex;align-items:center;gap:9px 12px;flex-wrap:wrap;padding:11px 18px;background:#243b3f;border-bottom:1px solid #b8a16b50;color:#dedac5}
+.game-mount .board-tools .button{min-height:36px;padding:7px 11px;font-size:12px}
+.game-mount .arrow-tool svg,.game-mount .arrow-clear svg{width:19px;height:19px;flex-shrink:0}
+.game-mount .arrow-tool[aria-pressed='true']{background:#d3b576;color:#22383c;border-color:#f2d497;box-shadow:inset 0 0 0 2px #624b2838}
+.game-mount .arrow-help{font-size:12px;line-height:1.5;color:#ddd9c5;flex:1 1 240px}
+.game-mount .arrow-origin{outline:3px solid #8cdae9!important;outline-offset:4px}
+.game-mount .arrow-pickable{cursor:crosshair}
+.game-mount .arrow-pickable:hover{border-color:#89d9e7;box-shadow:0 0 0 2px #89d9e750,0 4px 12px #0005}
+.game-mount .stack-zone{background:#22393e;border-top:1px solid #c7ad6c75;border-bottom:1px solid #c7ad6c75;padding:14px 18px;color:#e6dfc5}
+.game-mount .stack-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#efdbab;font-size:14px;font-weight:650;line-height:1.5}
+.game-mount .stack-heading small{font-size:11px;font-weight:400;color:#d2d6c4}
+.game-mount .stack-heading h2{font-size:18px;line-height:1.4;letter-spacing:.4px}
+.game-mount .stack-heading p{font-size:12px;font-weight:400;line-height:1.5;color:#d2d6c4}
+.game-mount .stack-cards{display:flex;align-items:stretch;gap:15px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#b9a16b #24393c;padding:12px 5px 10px;min-height:76px;list-style:none;margin:0}
+.game-mount .stack-item{flex:0 0 148px;max-width:148px;list-style:none}
+.game-mount .stack-card{flex:0 0 116px;width:116px;display:flex;flex-direction:column;align-items:stretch;padding:0;border:2px solid #9e9165;border-radius:6px;background:#182e32;box-shadow:0 4px 9px #10212480;position:relative;line-height:normal;color:#f0e4bd;cursor:pointer}
+.game-mount .stack-card-kind{display:block;padding:5px 6px;font-size:10px;font-weight:700;line-height:1.4;background:#c8ad72;color:#23373a;letter-spacing:.4px}
+.game-mount .stack-card-placeholder{display:grid;place-items:center;height:150px;font-size:35px;color:#c7b67d}
+.game-mount .stack-card img{width:100%;height:auto;aspect-ratio:744/1039;object-fit:contain;display:block;border-radius:4px 4px 0 0}
+.game-mount .stack-card.ability-copy img{filter:grayscale(1)}
+.game-mount .stack-card.next{border-color:#f0cf7e;box-shadow:0 0 0 2px #d6b66d40,0 4px 12px #10212480}
+.game-mount .stack-card:hover,.game-mount .stack-card:focus-visible{border-color:#f3dca1}
+.game-mount .stack-card-meta{display:block;padding:8px;font-size:11px;line-height:1.45;text-align:left;color:#ece3c8;overflow-wrap:anywhere}
+.game-mount .stack-card-meta strong{display:block;color:#f5d78f;font-size:11px;margin-bottom:4px}
+.game-mount .stack-card-meta small{display:block;color:#c3cfbf;font-size:10px;margin-top:4px}
+.game-mount .stack-card-meta>span{display:block;margin-top:5px;font-size:10px;color:#c9cfbf}
+.game-mount .stack-item.next .stack-card-meta>span{color:#ffe0a0;font-weight:650}
+.game-mount .stack-empty{font-size:12px;line-height:1.6;color:#cad3c0;align-self:center;margin:4px 0}
+.game-mount .stack-zone .stack-entry{border:0;background:transparent;padding:0}
+.game-mount .game-arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:9;overflow:hidden}
+.game-mount .game-arrows [data-arrow-player='0']{--arrow-color:#f2ca7a}
+.game-mount .game-arrows [data-arrow-player='1']{--arrow-color:#82d7ed}
+.game-mount .game-arrow-line{fill:none;stroke:var(--arrow-color,#f2ca7a);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.game-mount .game-arrow-head{fill:var(--arrow-color,#f2ca7a);stroke:#17292b;stroke-width:1}
+.game-mount .game-arrow-halo{fill:none;stroke:#17292b88;stroke-width:6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.game-mount .game-arrows circle{fill:var(--arrow-color,#f2ca7a);stroke:#17292b;stroke-width:1.5}
+@media(max-width:600px){
+  .game-mount .scoreboard-player{padding:13px 12px;gap:4px 8px}
+  .game-mount .scoreboard-name{font-size:12px}
+  .game-mount .scoreboard-value{font-size:37px}
+  .game-mount .scoreboard-goal{font-size:10px}
+  .game-mount .board-tools{padding:10px 12px;gap:8px}
+  .game-mount .arrow-help{flex-basis:100%;font-size:11px}
+  .game-mount .stack-zone{padding:12px}
+  .game-mount .stack-heading{font-size:13px}
+  .game-mount .stack-card{width:103px;flex-basis:103px}
+}

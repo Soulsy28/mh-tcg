@@ -1,12 +1,14 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.5.1 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.6.0 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 Pour récupérer le projet et le publier sur GitHub Pages, suivre le guide [GITHUB.md](GITHUB.md). La configuration de publication automatique est fournie dans `.github/workflows/pages.yml`.
 
 ## Ce que contient le site
 
 L’habillage de la Guilde emploie un fond parchemin cartographique, des panneaux clairs, des cadres bronze et des boutons bleu encre. Il s’inspire de références officielles Monster Hunter détaillées dans [docs/DIRECTION-ARTISTIQUE.md](docs/DIRECTION-ARTISTIQUE.md). La feuille `dist/theme.css` porte cet habillage ; les fonctions et l’organisation des écrans sont conservées. Les textures SVG sont originales et incluses dans les fichiers du site.
+
+L’accueil présente trois cartes différentes tirées au hasard parmi les cartes numérotées, Chefs compris. Le tirage se fait dans le navigateur à chaque chargement du site. Il reste stable pendant la navigation et le changement de langue ; les images et noms suivent le choix français ou anglais. Les jetons sont exclus de cette présentation.
 
 - Une création de profil avec pseudo et mot de passe, sans email.
 - Un deck builder pour les cartes actuelles, avec onglets Cartes, Chefs de chasse et Analyse.
@@ -58,6 +60,10 @@ L’étude et ses références sont disponibles dans [docs/ANALYSE-DECKBUILDER.m
 ## Tester le jeu seul
 
 La table agrandie affiche les étapes du tour, des rations sous forme de cartes et un aperçu au survol, au focus ou au clic. Glisser une carte jouable depuis la main vers sa zone utilise la même action et le même paiement que les boutons. Les cibles nécessaires sont demandées avant validation. Le carnet de chasse détaille les pioches, rations et paiements sans annoncer les cartes piochées. Voir [docs/INTERFACE-JEU.md](docs/INTERFACE-JEU.md) pour les commandes et leurs limites.
+
+Un bandeau présente les points des deux joueurs et l'objectif de six points. La zone de pile montre les cartes jouées et les copies de capacités, ces dernières en noir et blanc. Maintenir **F** puis cliquer sur une carte publique propose ses capacités disponibles avec leurs choix et coûts. Après deux passages successifs, le dernier élément se résout ; une nouvelle fenêtre de réponse s'ouvre ensuite. En table libre, les effets non programmés demandent une résolution avec les outils puis une confirmation explicite.
+
+Le bouton **Flèche**, accompagné d'un pictogramme, permet de relier deux cartes publiques ou éléments de pile. Les flèches contournent les cartes lorsque la place le permet, se partagent en ligne et ne remplacent pas les choix de cibles des règles. Chaque joueur peut conserver six flèches et effacer les siennes. Elles disparaissent lorsque leurs cartes quittent les zones publiques.
 
 Le mode test est une table d'entraînement : tu choisis les actions des deux camps. Il ne s'agit pas encore d'un adversaire informatique qui choisit sa propre stratégie.
 
