@@ -1,9 +1,9 @@
 {
   "app": "mh-tcg-guilde",
-  "version": "0.6.0",
-  "builtAt": "2026-11-03T20:04:10.115Z",
+  "version": "0.6.1",
+  "builtAt": "2026-11-03T20:20:32.883Z",
   "deployment": "static",
-  "catalogVersion": "2026-11-01",
+  "catalogVersion": "2026-11-03-silas202",
   "sources": {
     "cards": {
       "title": "Catalogue des cartes"
