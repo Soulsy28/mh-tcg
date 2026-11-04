@@ -9,6 +9,8 @@
   const object = value => !!value && typeof value === 'object' && !Array.isArray(value);
   const validPlayer = player => player === 0 || player === 1;
   const bounded = (value, max) => typeof value === 'string' && value.length <= max;
+  const MARKERS = ['Quête','Spirituel','Chaleur','Charge'];
+  const CHAT_MAX_LENGTH = 500, CHAT_MAX_BYTES = 2000, CHAT_HISTORY = 80, CHAT_LOG_BYTES = 16384;
   function checkState(state) {
     if (!object(state) || !Array.isArray(state.players) || state.players.length !== 2) throw Error('L’état initial de la partie est invalide.');
     for (const player of state.players) {
@@ -29,6 +31,7 @@
     if (action.id.split(':').some(part=>forbidden.has(part))) return null;
     const out = {id:action.id,type:action.type,label:String(action.label || action.type).slice(0,500),player:action.player};
     if (action.sourceId != null) out.sourceId=action.sourceId;
+    if (['marker-add','marker-remove'].includes(action.type) && MARKERS.includes(action.marker)) out.marker=action.marker;
     for (const key of ['targetCount','targetMin']) if (Number.isSafeInteger(action[key]) && action[key]>=0 && action[key]<=20) out[key]=action[key];
     if (action.description != null) out.description=String(action.description).slice(0,1000);
     if (Array.isArray(action.targets)) {
@@ -46,6 +49,27 @@
   function pruneAnnotations(state) {
     const next = checkState(clone(state));
     next.arrows = peer.publicArrows(next);
+    return next;
+  }
+  /** Chat is a public event in the same ordered journal, never a rules action. */
+  function applyCommunication(state, intent, player) {
+    if (!validPlayer(player)) throw Error('Le joueur qui écrit est invalide.');
+    if (!object(intent) || intent.type !== 'chat' || intent.id !== 'chat:send' || typeof intent.text !== 'string') throw Error('Le message de discussion est invalide.');
+    const text=intent.text.replace(/\r\n?/g,'\n').trim();
+    if (!text || text.length > CHAT_MAX_LENGTH || new TextEncoder().encode(text).length > CHAT_MAX_BYTES || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) throw Error('Écris un message de 1 à 500 caractères.');
+    const next=checkState(clone(state));
+    const log=(Array.isArray(next.log)?next.log:[]).slice(-250);
+    log.push({kind:'chat',public:true,player,turn:Number.isSafeInteger(next.turn)&&next.turn>=0?next.turn:0,text});
+    let chats=0,bytes=0,chatClosed=false;const recent=[];
+    for(let index=log.length-1;index>=0;index--){
+      if(log[index]?.kind==='chat'){
+        const size=new TextEncoder().encode(JSON.stringify(log[index])).length+1;
+        if(chatClosed || ++chats>CHAT_HISTORY || bytes+size>CHAT_LOG_BYTES){chatClosed=true;continue;}
+        bytes+=size;
+      }
+      recent.push(log[index]);
+    }
+    next.log=recent.reverse().slice(-250);
     return next;
   }
   /** Annotations are public drawing intents, independent of turn priority. */
@@ -111,6 +135,7 @@
     #catalog;
     #engine;
     #mode;
+    #chatWindows = [{start:0,count:0},{start:0,count:0}];
     constructor({catalog,engine,initialState,engineMode} = {}) {
       if (!catalog?.cards || typeof engine?.getActions!=='function' || typeof engine?.dispatch!=='function' || typeof peer?.redactState!=='function') throw Error('Le moteur et le catalogue de la partie sont requis.');
       if (!object(initialState)) throw Error('L’état initial de la partie est invalide.');
@@ -152,6 +177,16 @@
         this.#state=applyAnnotation(this.#state,intent,player);this.#revision++;
         return {revision:this.#revision};
       }
+      if (intent.type === 'chat') {
+        // A short burst is allowed; an untrusted peer cannot flood the table indefinitely.
+        const now=Date.now(),previous=this.#chatWindows[player];
+        const window=now>=previous.start && now-previous.start<10000?previous:{start:now,count:0};
+        if(window.count>=6)throw Error('Patiente quelques secondes avant d’envoyer un autre message.');
+        const next=applyCommunication(this.#state,intent,player);
+        this.#chatWindows[player]={start:window.start,count:window.count+1};
+        this.#state=next;this.#revision++;
+        return {revision:this.#revision};
+      }
       const allowed=this.#actions().find(action=>action.id===intent.id && action.player===player);
       if (!allowed) throw Error('Cette action n’est pas autorisée pour ce joueur à cet instant.');
       if (intent.type!=null && intent.type!==allowed.type) throw Error('Le type de cette action ne correspond pas à l’action autorisée.');
@@ -174,5 +209,5 @@
       return {revision:this.#revision};
     }
   }
-  return {HostMatch, applyAnnotation, pruneAnnotations, ActionRequests};
+  return {HostMatch, applyAnnotation, applyCommunication, pruneAnnotations, ActionRequests};
 });
