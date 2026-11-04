@@ -311,6 +311,25 @@
     }
     return arrows;
   }
+  /** Keep one chronological journal, with bounded raw chat text and no sender metadata. */
+  function publicLog(state) {
+    const source=Array.isArray(state?.log)?state.log:[],out=[];let bytes=2,chats=0,chatBytes=0,chatClosed=false;
+    for(let index=source.length-1;index>=0 && out.length<100;index--){
+      const event=source[index];
+      if(!isObject(event)||event.public!==true)continue;
+      const chat=event.kind==='chat';
+      if(chat && (![0,1].includes(event.player)||chatClosed))continue;
+      const text=str(event.text,chat?500:1000);
+      if(!text.trim())continue;
+      const record={turn:integer(event.turn),text,...(chat?{kind:'chat',player:event.player}:{})};
+      const size=utf8(JSON.stringify(record)).length+1;
+      if(chat && (chats>=80||chatBytes+size>16384)){chatClosed=true;continue;}
+      // Leave room for public cards, actions and the transport envelope.
+      if(bytes+size>48*1024)break;
+      bytes+=size;if(chat){chats++;chatBytes+=size;}out.push(record);
+    }
+    return out.reverse();
+  }
   /** Vue d'affichage seulement : ne jamais lancer le moteur sur cette vue masquée. */
   function redactState(state, viewerIndex) {
     if (!isObject(state) || !Array.isArray(state.players) || state.players.length !== 2 || ![0, 1].includes(viewerIndex)) throw Error('La vue de partie demandée est invalide.');
@@ -351,8 +370,8 @@
       combat: !isObject(combat) ? null : {id: str(combat.id, 100), attackerId: str(combat.attackerId, 100), targetId: str(combat.targetId, 100), stage: str(combat.stage, 40), interpositionUsed: !!combat.interpositionUsed, interrupted: !!combat.interrupted, damageDone: !!combat.damageDone},
       pending: !isObject(pending) ? null : {player: pending.player === 1 ? 1 : 0, label: manualResolution || pending.player === viewerIndex ? str(pending.label) : 'L’adversaire effectue un choix.', private: !manualResolution && pending.player !== viewerIndex, ...(manualResolution ? {kind: 'manual-resolution', entryId: publicArrowNodes(state).has('stack:' + pendingEntry) ? pendingEntry : null} : {})},
       // Les anciens journaux n'ont pas de classification de confidentialité : ne pas les retransmettre.
-      log: (Array.isArray(state.log) ? state.log : []).filter(l => isObject(l) && l.public === true).slice(-100).map(l => ({turn: integer(l.turn), text: str(l.text, 1000)}))
+      log: publicLog(state)
     };
   }
-  return {PeerSession, encodeSignal, decodeSignal, rtcConfiguration, redactState, publicArrowNodes, publicArrows, constants: {PROTOCOL, VERSION, MAX_CODE, MAX_MESSAGE, ICE_TIMEOUT, SIGNAL_TTL, ARROWS_PER_PLAYER}};
+  return {PeerSession, encodeSignal, decodeSignal, rtcConfiguration, redactState, publicArrowNodes, publicArrows, publicLog, constants: {PROTOCOL, VERSION, MAX_CODE, MAX_MESSAGE, ICE_TIMEOUT, SIGNAL_TTL, ARROWS_PER_PLAYER}};
 });
