@@ -11,7 +11,7 @@ const source = fs.readFileSync(require.resolve('../dist/game-ui.js'), 'utf8');
 // The view delegates every move to its caller. A small DOM harness lets these
 // tests inspect those requests without coupling them to CSS or a browser driver.
 function harness(options = {}) {
-  const nodes = [];
+  const nodes = [], queryNodes=new Map();
   function element(tag = 'div', dataset = {}) {
     const node = {tag, dataset, innerHTML:'', children:[], listeners:{}, open:false, style:{},
       classList:{toggle(){}, remove(){}},
@@ -24,7 +24,7 @@ function harness(options = {}) {
         return match&&this.hasAttribute(match[1])?this:null;
       },
       contains(item){return !!item && item.inShell!==false;},
-      querySelector(selector){return selector==='.inspector-panel'?inspector:selector==='.board-scroll'?boardScroller:null;},querySelectorAll(){return [];},
+      querySelector(selector){return queryNodes.get(selector) || (selector==='.inspector-panel'?inspector:selector==='.board-scroll'?boardScroller:null);},querySelectorAll(){return [];},
       addEventListener(name,fn){this.listeners[name]=fn;}, removeEventListener(name){delete this.listeners[name];},
       showModal(){this.open=true;},close(){this.open=false;},remove(){this.removed=true;}
     };
@@ -62,7 +62,7 @@ function harness(options = {}) {
     const drop=event('pointerup',{}, {pointerId:1,clientX:80,clientY:150});
     return {start,drop};
   }
-  return {ui,shell,content,dialog,inspector,arrows,state,sent,event,card,update,drag,language,document,frames,tick,boardScroller,context,element};
+  return {ui,shell,content,dialog,inspector,arrows,state,sent,event,card,update,drag,language,document,frames,tick,boardScroller,context,element,queryNodes};
 }
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 
@@ -208,10 +208,11 @@ test('une fenêtre de réponses annonce correctement le début, la fin ou une r�
   h.state.flow='main';h.update();assert.match(h.content.innerHTML,/Une fenêtre de réponse est ouverte/);
 });
 
-test('le carnet rend tous les événements conservés par le moteur',()=>{
+test('le carnet rend tous les événements conservés par le moteur en ordre chronologique',()=>{
   const h=harness();h.state.log=Array.from({length:250},(_,index)=>({text:'Événement '+index}));h.update();
-  assert.equal((h.content.innerHTML.match(/class="history-entry"/g)||[]).length,250);
+  assert.equal((h.content.innerHTML.match(/class="history-entry system-entry"/g)||[]).length,250);
   assert.match(h.content.innerHTML,/Événement 0<\/p>/);assert.match(h.content.innerHTML,/Événement 249<\/p>/);
+  assert(h.content.innerHTML.indexOf('Événement 0</p>')<h.content.innerHTML.indexOf('Événement 249</p>'));
 });
 
 test('le clic sur son deck ne pioche que si le moteur fournit l’action draw légale',async()=>{
@@ -402,4 +403,112 @@ test('les deux points de chasse sont mis en évidence et la vue attend la confir
   h.event('click',{gameCommand:'arrow'});h.event('click',{gameUid:a.uid,gameArrowNode:'card:'+a.uid});h.event('click',{gameUid:b.uid,gameArrowNode:'card:'+b.uid});
   assert.match(h.content.innerHTML,/arrow-tool[^>]+disabled/);assert.equal(typeof finish,'function');
   finish();await settle();assert(!/arrow-tool[^>]+disabled/.test(h.content.innerHTML));
+});
+
+test('le carnet distingue les messages des joueurs, conserve leur texte brut et mélange les événements dans le bon ordre',()=>{
+  const h=harness();h.state.players[0].name='Accueil';h.state.players[1].name='<Second>';
+  h.state.log=[{public:true,text:'Première action',turn:1},{public:true,kind:'chat',player:1,text:'<img src=x onerror=alert(1)> Accueil Felyne Infirmier',turn:1},{public:true,text:'Dernière action',turn:1}];h.update();h.language.setLanguage('en');
+  const html=h.content.innerHTML;
+  assert.match(html,/class="chat-entry [^"]*" data-chat-player="1"/);
+  assert.match(html,/class="chat-name">&lt;Second&gt;<\/strong>/);
+  assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt; Accueil Felyne Infirmier/);
+  assert(!html.includes('<img src=x'));
+  assert(html.indexOf('Première action')<html.indexOf('class="chat-message"'));
+  assert(html.indexOf('class="chat-message"')<html.indexOf('Dernière action'));
+  assert.match(html,/data-no-i18n/);assert.match(html,/Log &amp; chat|Log & chat/);
+});
+
+test('le tchat peut envoyer hors priorité et après la fin sans modifier l’état local ou perdre la sélection',async()=>{
+  const h=harness({localPlayer:0}),source=fieldCard(h,'item','022');h.state.priorityPlayer=1;h.state.winner=1;h.update([]);
+  h.event('click',{gameUid:source.uid});const before=JSON.stringify(h.state);
+  h.event('input',{gameChatInput:''},{value:'unused',target:{hasAttribute:name=>name==='data-game-chat-input',value:'  Bonjour !  '}});
+  h.event('submit',{gameChatForm:''});await settle();
+  assert.deepEqual(h.sent,[{id:'chat:send',type:'chat',player:0,text:'Bonjour !'}]);
+  assert.equal(JSON.stringify(h.state),before);assert.match(h.content.innerHTML,new RegExp('class="game-card [^"]*selected[^"]*" data-game-uid="'+source.uid+'"'));
+  assert.match(h.content.innerHTML,/data-game-chat-input[^>]+value=""/);
+});
+
+test('le solo choisit l’auteur du message, et un échec ou une requête en attente conserve le brouillon',async()=>{
+  let finish;const h=harness({onAction:()=>new Promise(resolve=>{finish=resolve;})});h.update();
+  h.event('change',{gameChatAuthor:''},{target:{hasAttribute:name=>name==='data-game-chat-author',value:'1'}});
+  const input=text=>h.event('input',{},{target:{hasAttribute:name=>name==='data-game-chat-input',value:text}});
+  input('message du camp deux');h.event('submit',{gameChatForm:''});assert.equal(typeof finish,'function');assert.match(h.content.innerHTML,/chat-submit[^>]+disabled/);
+  input('nouveau brouillon pendant l’envoi');h.event('submit',{gameChatForm:''});
+  finish(false);await settle();assert.match(h.content.innerHTML,/value="nouveau brouillon pendant l’envoi"/);
+  h.language.setLanguage('en');assert.match(h.content.innerHTML,/value="nouveau brouillon pendant l’envoi"/);
+  const sent=[];const simple=harness({onAction:action=>sent.push(action)});simple.update();simple.event('change',{},{target:{hasAttribute:name=>name==='data-game-chat-author',value:'1'}});
+  simple.event('input',{},{target:{hasAttribute:name=>name==='data-game-chat-input',value:' Camp deux '}});simple.event('submit',{gameChatForm:''});await settle();
+  assert.equal(sent[0].player,1);assert.equal(sent[0].text,'Camp deux');
+});
+
+test('un tchat déconnecté conserve la saisie et n’émet aucune demande, même au clavier',async()=>{
+  const h=harness({localPlayer:0,isConnected:()=>false});h.update();
+  h.event('input',{},{target:{hasAttribute:name=>name==='data-game-chat-input',value:'Je reprends bientôt'}});h.event('submit',{gameChatForm:''});await settle();
+  assert.equal(h.sent.length,0);assert.match(h.content.innerHTML,/chat-submit[^>]+disabled/);
+  h.state.turn=2;h.update();assert.match(h.content.innerHTML,/value="Je reprends bientôt"/);
+  h.document.listeners.keydown({key:'f',target:{tagName:'INPUT'},preventDefault(){throw Error('Le champ ne doit pas être intercepté');}});
+});
+
+test('une mise à jour conserve le focus et la sélection du brouillon ainsi que la lecture d’anciens messages',()=>{
+  const h=harness();h.update();const input=h.element('input',{gameChatInput:''}),feed=h.element();
+  input.selectionStart=2;input.selectionEnd=5;input.focus=()=>{h.document.activeElement=input;};input.setSelectionRange=(start,end)=>{input.range=[start,end];};
+  Object.assign(feed,{scrollTop:35,scrollHeight:600,clientHeight:100});h.queryNodes.set('[data-game-chat-input]',input);h.queryNodes.set('.communication-feed',feed);h.document.activeElement=input;
+  h.event('input',{},{target:{hasAttribute:name=>name==='data-game-chat-input',value:'brouillon long'}});h.state.log.push({public:true,kind:'chat',player:1,turn:1,text:'Réponse'});h.update();
+  assert.deepEqual(input.range,[2,5]);assert.equal(h.document.activeElement,input);assert.equal(feed.scrollTop,35);
+  assert.match(h.content.innerHTML,/value="brouillon long"/);assert.match(h.content.innerHTML,/data-game-command="feed-latest" >/);
+  h.event('click',{gameCommand:'feed-latest'});assert.equal(feed.scrollTop,600);
+  assert.match(h.content.innerHTML,/data-game-command="feed-latest" hidden/);
+});
+
+test('les quatre marqueurs utilisent des logos distincts avec un nombre seulement à partir de deux',()=>{
+  const h=harness(),card=fieldCard(h,'hunter','014');card.counters={Spirituel:1,Chaleur:2,Charge:3,'Quête':4};h.update();
+  for(const [kind,count] of Object.entries(card.counters)){
+    const badge=h.content.innerHTML.match(new RegExp('class="card-counter-badge counter-'+kind+'"[^>]*>([\\s\\S]+?)<\\/span>'))[1];
+    assert.match(badge,/class="counter-icon"/);assert.equal(badge.includes('<b>'),count>1);if(count>1)assert.match(badge,new RegExp('<b>'+count+'<\\/b>'));
+  }
+  assert.equal((h.content.innerHTML.match(/data-game-counter-kind=/g)||[]).length,4);
+  h.language.setLanguage('en');assert.match(h.content.innerHTML,/Spiritual: 1/);assert.match(h.content.innerHTML,/Heat: 2/);assert.match(h.content.innerHTML,/Quest: 4/);
+});
+
+test('choisir un marqueur puis une carte publique délègue les ajouts et retraits canoniques sans mutation locale',async()=>{
+  const h=harness(),card=fieldCard(h,'hunter','014');h.update();
+  for(const marker of ['Spirituel','Chaleur','Charge','Quête']){
+    const expected=T.getActions(h.state,C).find(action=>action.type==='marker-add'&&action.sourceId===card.uid&&action.marker===marker),before=JSON.stringify(h.state);
+    h.event('click',{gameCounterKind:marker});h.event('click',{gameUid:card.uid});await settle();assert.deepEqual(h.sent.at(-1),expected);assert.equal(JSON.stringify(h.state),before);
+    Object.assign(h.state,T.dispatch(h.state,h.sent.at(-1),C));h.update();
+  }
+  h.event('click',{gameCommand:'counter-mode'});h.event('click',{gameUid:card.uid});await settle();assert.equal(h.sent.at(-1).type,'marker-remove');assert.equal(h.sent.at(-1).marker,'Quête');
+  const next=T.dispatch(h.state,h.sent.at(-1),C);assert(!next.players[0].camp.find(c=>c.uid===card.uid).counters.Quête);
+});
+
+test('le glisser de marqueur souris et tactile vérifie la cible publique puis transmet une seule action',async()=>{
+  for(const pointerType of ['mouse','touch']){
+    const h=harness(),card=fieldCard(h,'hunter','014'),target=h.element('button',{gameUid:card.uid});h.update();h.document.elementFromPoint=()=>target;
+    h.event('pointerdown',{gameCounterKind:'Spirituel'},{pointerType,pointerId:42,clientX:10,clientY:10});
+    h.event('pointermove',{}, {pointerType,pointerId:42,clientX:80,clientY:150});h.event('pointerup',{}, {pointerType,pointerId:42,clientX:80,clientY:150});await settle();
+    assert.equal(h.sent.length,1);assert.equal(h.sent[0].type,'marker-add');assert.equal(h.sent[0].sourceId,card.uid);assert.equal(h.sent[0].marker,'Spirituel');assert.equal(h.frames.size,0);
+  }
+});
+
+test('un marqueur ne se dépose ni dans une main, ni sans priorité, ni dans le mode automatisé',async()=>{
+  for(const mode of ['hand','priority','auto']){
+    const h=harness({localPlayer:0,mode:mode==='auto'?'auto':'manual'}),card=mode==='hand'?h.card('hunter'):fieldCard(h,'hunter','014');
+    if(mode==='priority')h.state.priorityPlayer=1;h.update();h.document.elementFromPoint=()=>h.element('button',{gameUid:card.uid});
+    h.event('pointerdown',{gameCounterKind:'Charge'},{pointerId:8,clientX:10,clientY:10});h.event('pointermove',{}, {pointerId:8,clientX:80,clientY:150});h.event('pointerup',{}, {pointerId:8,clientX:80,clientY:150});await settle();assert.equal(h.sent.length,0,mode);
+  }
+});
+
+test('annuler le marqueur ou recevoir une mise à jour distante ne pose rien au relâchement',async()=>{
+  for(const finish of ['cancel','escape','update','blur','destroy']){
+    const h=harness(),card=fieldCard(h,'hunter','014');h.update();h.document.elementFromPoint=()=>h.element('button',{gameUid:card.uid});
+    h.event('pointerdown',{gameCounterKind:'Chaleur'},{pointerId:8,clientX:10,clientY:10});h.event('pointermove',{}, {pointerId:8,clientX:80,clientY:150});
+    if(finish==='cancel')h.event('pointercancel',{}, {pointerId:8});else if(finish==='escape')h.event('keydown',{}, {key:'Escape'});else if(finish==='update')h.update();else if(finish==='blur')h.context.listeners.blur();else h.ui.destroy();
+    h.event('pointerup',{}, {pointerId:8,clientX:80,clientY:150});await settle();assert.equal(h.sent.length,0,finish);assert.equal(h.frames.size,0,finish);
+  }
+});
+
+test('les panneaux compacts s’ouvrent et se referment sans masquer ni révéler une autre main',()=>{
+  const h=harness({localPlayer:0}),enemy=h.card('hunter',1);h.update();h.event('click',{gameCommand:'panels'});assert.match(h.content.innerHTML,/arena-panel-toggle[^>]+aria-expanded="true"/);
+  h.event('keydown',{}, {key:'Escape'});assert.match(h.content.innerHTML,/arena-panel-toggle[^>]+aria-expanded="false"/);
+  assert(!h.content.innerHTML.includes('data-game-preview-uid="'+enemy.uid+'"'));assert.match(h.content.innerHTML,/arena-mobile-actions/);
 });
