@@ -1,4 +1,16 @@
-# Vérification de la version 0.6.1
+# Vérification de la version 0.7.0
+
+## Plateau compact, carnet et marqueurs
+
+Le 4 novembre 2026, les 236 tests automatisés passent. Les nouveaux contrôles couvrent notamment le tchat public, l'identité de son auteur validée par l'hôte, les messages refusés, la conservation du brouillon, les limites de l'historique et les ajustements de marqueurs autorisés. Les informations cachées restent exclues des messages de synchronisation.
+
+Des essais réels dans le navigateur ont été réalisés à 1280 × 720, 1366 × 768 et 1920 × 1080. La page ne déborde pas et le plateau tient dans la hauteur disponible, avec la main, les scores, les étapes et les outils accessibles sans faire défiler la page. Un terrain chargé avec cinq Chasseurs par camp, sept Monstres et deux Objets a également été contrôlé. Le carnet et les panneaux qui contiennent beaucoup de texte disposent de leur propre défilement.
+
+À 390 × 844, le panneau latéral s'ouvre dans un tiroir ; son ouverture et sa fermeture permettent de retrouver le terrain sans élargir la page. Les vrais déplacements de marqueurs à la souris ont été vérifiés pour Quête, Spirituel, Chaleur et Charge, ainsi que le cumul des badges, l'affichage des quantités et le retrait des marqueurs. Ces réglages manuels restent soumis aux actions autorisées de la table libre.
+
+Le carnet mélange les événements de jeu et les messages dans leur ordre d'arrivée, avec une présentation distincte pour les joueurs. Le passage FR/EN conserve le brouillon et les messages déjà envoyés ; leur contenu reste tel qu'il a été écrit. Deux clients réellement reliés par WebRTC sur le réseau local, sans STUN, ont partagé les messages et les marqueurs. Cet essai local ne valide pas une connexion entre deux réseaux Internet distincts.
+
+## Vérifications antérieures — version 0.6.1
 
 ## Correction de Silas, carte 202
 
