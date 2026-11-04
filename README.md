@@ -1,6 +1,6 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.6.1 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.7.0 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 La carte 202, Silas, utilise les nouvelles illustrations françaises et anglaises fournies par le créateur. Une fois par tour, Manger ou renvoyer une carte du terrain dans la main de son propriétaire déclenche un soin de 1 blessure à un Chasseur ou un Monstre allié ciblé. Son identifiant reste 202 et les decks existants conservent leur Chef.
 
@@ -64,6 +64,12 @@ L’étude et ses références sont disponibles dans [docs/ANALYSE-DECKBUILDER.m
 La table agrandie affiche les étapes du tour, des rations sous forme de cartes et un aperçu au survol, au focus ou au clic. Glisser une carte jouable depuis la main vers sa zone utilise la même action et le même paiement que les boutons. Les cibles nécessaires sont demandées avant validation. Le carnet de chasse détaille les pioches, rations et paiements sans annoncer les cartes piochées. Voir [docs/INTERFACE-JEU.md](docs/INTERFACE-JEU.md) pour les commandes et leurs limites.
 
 Un bandeau présente les points des deux joueurs et l'objectif de six points. La zone de pile montre les cartes jouées et les copies de capacités, ces dernières en noir et blanc. Maintenir **F** puis cliquer sur une carte publique propose ses capacités disponibles avec leurs choix et coûts. Après deux passages successifs, le dernier élément se résout ; une nouvelle fenêtre de réponse s'ouvre ensuite. En table libre, les effets non programmés demandent une résolution avec les outils puis une confirmation explicite.
+
+Sur ordinateur, la table occupe l'écran : Camp adverse, chasse partagée, Camp du joueur et main restent visibles. La pile utilise un rail latéral et le panneau de droite réunit l'aperçu, les actions et le carnet. Les cartes se resserrent selon la place disponible ; le survol, la sélection et le bouton de lecture permettent toujours de lire leur texte en grand.
+
+Le carnet commun affiche les actions et les messages de tchat dans leur ordre d'arrivée. Les messages des joueurs portent leur pseudo et une présentation distincte ; leur texte est conservé tel qu'il a été écrit dans les deux langues. Le tchat fonctionne aussi hors priorité, passe par la connexion directe entre les joueurs et reste dans la sauvegarde locale du test solo. Chaque message contient au plus 500 caractères ; seuls les événements récents sont gardés.
+
+Une palette propose les marqueurs **Quête, Spirituel, Chaleur et Charge**. En table libre, glisser un pictogramme sur une carte publique ajoute le marqueur choisi ; le mode Retirer en enlève un. Cliquer sur un pictogramme puis sur une carte offre le même geste sans glisser. Les petits badges en haut à droite des cartes regroupent les marqueurs identiques et affichent leur quantité. En mode automatisé, les effets du moteur règlent les compteurs et la palette les présente en lecture seule.
 
 Le bouton **Flèche**, accompagné d'un pictogramme, permet de relier deux cartes publiques ou éléments de pile. Les flèches contournent les cartes lorsque la place le permet, se partagent en ligne et ne remplacent pas les choix de cibles des règles. Chaque joueur peut conserver six flèches et effacer les siennes. Elles disparaissent lorsque leurs cartes quittent les zones publiques.
 
