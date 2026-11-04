@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const APP_ID = 'mh-tcg-simulator';
-const VERSION = '0.6.1';
+const VERSION = '0.7.0';
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',

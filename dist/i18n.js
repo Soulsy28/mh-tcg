@@ -5,6 +5,13 @@
   const translations = Object.fromEntries(`
 Arc|Bow
 Silas : soigner un allié|Silas: heal an ally
+♧ Test solo · Deux camps|♧ Solo test · Both sides
+Table libre · effets manuels|Free table · manual effects
+Les joueurs résolvent les effets et les coûts particuliers avec les outils de la table.|Players resolve effects and special costs using the table tools.
+Le joueur qui écrit est invalide.|The player sending the message is invalid.
+Le message de discussion est invalide.|The chat message is invalid.
+Écris un message de 1 à 500 caractères.|Write a message between 1 and 500 characters.
+Patiente quelques secondes avant d’envoyer un autre message.|Wait a few seconds before sending another message.
 Accueil|Home
 Bibliothèque|Card library
 Jouer|Play

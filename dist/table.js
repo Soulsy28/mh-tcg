@@ -7,6 +7,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const NOTICE = 'Table libre : effets des cartes, mots-clés conditionnels et coûts supplémentaires à résoudre manuellement.';
+  const MARKERS = ['Quête','Spirituel','Chaleur','Charge'];
   const clone = value => JSON.parse(JSON.stringify(value));
   function canonical(id) {
     const value = String(id ?? '').replace(/^MhFG[-_]/i, '');
@@ -335,10 +336,10 @@
       }
       add({ id: 'marker-up:' + c.uid, type: 'marker-up', label: 'Ajouter 1 marqueur manuel', sourceId: c.uid });
       if (c.counters?.Manuel > 0) add({ id: 'marker-down:' + c.uid, type: 'marker-down', label: 'Retirer 1 marqueur manuel', sourceId: c.uid });
-      const namedMarkers=[...new Set(Array.from(d.text.matchAll(/marqueurs? ([\p{L}]+)/gu),m=>m[1]).filter(name=>/^(?:Chaleur|Spirituel|Charge|Quête)$/.test(name)))];
-      for(const marker of namedMarkers){
-        add({id:'marker-add:'+c.uid+':'+marker,type:'marker-add',sourceId:c.uid,marker,label:'Ajouter 1 marqueur '+marker});
-        if(c.counters[marker]>0)add({id:'marker-remove:'+c.uid+':'+marker,type:'marker-remove',sourceId:c.uid,marker,label:'Retirer 1 marqueur '+marker});
+      for(const marker of MARKERS){
+        const amount=Number.isSafeInteger(c.counters?.[marker])&&c.counters[marker]>0?c.counters[marker]:0;
+        if(amount<99)add({id:'marker-add:'+c.uid+':'+marker,type:'marker-add',sourceId:c.uid,marker,label:'Ajouter 1 marqueur '+marker});
+        if(amount>0)add({id:'marker-remove:'+c.uid+':'+marker,type:'marker-remove',sourceId:c.uid,marker,label:'Retirer 1 marqueur '+marker});
       }
     }
     for (const c of me.discard) { add({ id: 'recover:' + c.uid, type: 'recover', label: 'Récupérer ' + getCard(catalog, c.cardId).name + ' en main', sourceId: c.uid }); add({ id: 'top:' + c.uid, type: 'top', label: 'Placer au-dessus du deck', sourceId: c.uid }); }
@@ -431,7 +432,7 @@
     else if (type === 'force-up' || type === 'force-down' || type === 'armor-up') { c.mods.push({ kind: type === 'armor-up' ? 'armor' : 'force', value: type === 'force-down' ? -1 : 1, duration: 'turn' }); log(s, d.name + ' : ajustement de ' + (type === 'armor-up' ? 'Cuirasse' : 'Force') + ' pour ce tour.'); }
     else if (type === 'surmenage') { c.overexerted = !c.overexerted; log(s, d.name + ' : Surmenage ' + (c.overexerted ? 'ajouté.' : 'retiré.')); }
     else if (type === 'marker-up' || type === 'marker-down') { c.counters.Manuel = Math.max(0, (c.counters.Manuel || 0) + (type === 'marker-up' ? 1 : -1)); log(s, d.name + ' : ' + c.counters.Manuel + ' marqueur(s) manuel(s).'); }
-    else if (type === 'marker-add' || type === 'marker-remove') { c.counters[allowed.marker]=Math.max(0,(c.counters[allowed.marker]||0)+(type==='marker-add'?1:-1));log(s,d.name+' : '+c.counters[allowed.marker]+' marqueur(s) '+allowed.marker+'.'); }
+    else if (type === 'marker-add' || type === 'marker-remove') { if(!c.counters)c.counters={};const amount=Number.isSafeInteger(c.counters[allowed.marker])&&c.counters[allowed.marker]>0?c.counters[allowed.marker]:0;c.counters[allowed.marker]=Math.max(0,amount+(type==='marker-add'?1:-1));if(!c.counters[allowed.marker])delete c.counters[allowed.marker];log(s,d.name+' : '+(c.counters[allowed.marker]||0)+' marqueur(s) '+allowed.marker+'.'); }
     else if (type === 'damage-up') { c.damage++; log(s, d.name + ' subit 1 blessure d’effet.'); checkDeaths(s, catalog, p); }
     else if (type === 'damage-down') { c.damage = Math.max(0, c.damage - 1); log(s, d.name + ' est soigné de 1 blessure.'); }
     else if (type === 'kill') { kill(s, c, choice === 'none' ? null : Number(choice), catalog); win(s); }

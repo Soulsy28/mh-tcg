@@ -3,6 +3,12 @@
   'use strict';
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const clone = value => JSON.parse(JSON.stringify(value));
+  const counterTypes = [
+    {key:'Spirituel',en:'Spiritual',path:'M12 3c5 3 7 7 5 11-1 3-5 6-8 4-4-2-3-6 0-7 3-1 6 2 3 4M5 19c-4-4-2-10 2-13'},
+    {key:'Chaleur',en:'Heat',path:'M13 3c1 5-3 5-1 9 2-1 3-3 3-5 5 5 5 12-2 14-7 1-11-7-6-12 0 4 3 5 3 2-1-3 0-6 3-8Z'},
+    {key:'Charge',en:'Charge',path:'m14 2-9 12h6l-1 8 9-13h-6l1-7Z'},
+    {key:'Quête',en:'Quest',path:'M5 22V3m0 1c5-5 9 5 14 0v11c-5 5-9-5-14 0'}
+  ];
   let boardNumber = 0;
   function create(options = {}) {
     const container = typeof options.container === 'string' ? document.querySelector(options.container) : options.container;
@@ -40,10 +46,13 @@
     let dragUid = null, touchDrag = null, dragGhost = null, suppressClickUntil = 0;
     let dragScrollFrame = null, dragScrollTime = 0;
     let effectKey = false, arrowMode = false, arrowOrigin = null, arrowFrame = null;
+    let counterTool = null, counterRemove = false, dragCounter = null;
+    let chatDraft = '', chatAuthor = null, chatBusy = false, feedUnread = false, feedSignature = '', forceFeedBottom = false;
+    let panelsOpen = false;
     const arrowMarker = 'mh-game-arrow-' + (++boardNumber);
     const content = document.createElement('div'); content.className = 'mh-game-content';
     const dialog = document.createElement('dialog'); dialog.className = 'mh-game-dialog'; dialog.setAttribute('aria-labelledby', 'mh-game-dialog-title');
-    const shell = document.createElement('section'); shell.className = 'mh-game'; shell.append(content, dialog); container.appendChild(shell);
+    const shell = document.createElement('section'); shell.className = 'mh-game arena-match'; shell.append(content, dialog); container.appendChild(shell);
     const arrowOverlay = document.createElementNS ? document.createElementNS('http://www.w3.org/2000/svg','svg') : document.createElement('svg');
     arrowOverlay.setAttribute('class','game-arrows'); arrowOverlay.setAttribute('aria-hidden','true'); arrowOverlay.setAttribute('focusable','false'); shell.appendChild(arrowOverlay);
     const call = (name, ...args) => { try { return options[name]?.(...args); } catch (error) { if (name !== 'onError') options.onError?.(error); } };
@@ -139,7 +148,45 @@
     }
     function boardToolsHtml() {
       const player=localPlayer ?? actor(), own=(state.arrows || []).some(arrow=>arrow.player===player);
-      return `<div class="board-tools" data-no-i18n><div class="arrow-controls"><button class="button arrow-tool ${arrowMode?'active':''}" data-game-command="arrow" aria-pressed="${arrowMode}" ${busy?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M4 20C4 11 12 6 20 4M12 4h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${tr('Flèche','Arrow')}</button><button class="tiny-button arrow-clear" data-game-command="clear-arrows" ${!own||busy?'disabled':''}>${tr('Effacer mes flèches','Clear my arrows')}</button></div><p class="arrow-help" role="status">${arrowMode?(arrowOrigin?tr('Choisis la carte d’arrivée. Échap annule.','Choose the destination card. Escape cancels.'):tr('Choisis une carte de départ, puis une carte d’arrivée.','Choose a source card, then a destination card.')):effectKey?tr('F maintenu : clique sur une carte pour activer sa capacité.','F held: click a card to activate its ability.'):tr('F + clic : activer une capacité · Flèche : relier deux cartes publiques','F + click: activate an ability · Arrow: connect two public cards')}</p></div>`;
+      return `<div class="board-tools" data-no-i18n><div class="arrow-controls"><button class="button arrow-tool ${arrowMode?'active':''}" data-game-command="arrow" aria-pressed="${arrowMode}" ${busy?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M4 20C4 11 12 6 20 4M12 4h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${tr('Flèche','Arrow')}</button><button class="tiny-button arrow-clear" data-game-command="clear-arrows" ${!own||busy?'disabled':''}>${tr('Effacer mes flèches','Clear my arrows')}</button></div>${counterPaletteHtml()}<p class="arrow-help" role="status">${counterTool?tr((counterRemove?'Retirer':'Ajouter')+' '+counterTool+' : glisse le marqueur ou clique sur une carte. Échap annule.',(counterRemove?'Remove':'Add')+' '+counterName(counterTool)+' counters: drag the token or click a card. Escape cancels.'):arrowMode?(arrowOrigin?tr('Choisis la carte d’arrivée. Échap annule.','Choose the destination card. Escape cancels.'):tr('Choisis une carte de départ, puis une carte d’arrivée.','Choose a source card, then a destination card.')):effectKey?tr('F maintenu : clique sur une carte pour activer sa capacité.','F held: click a card to activate its ability.'):tr('F + clic : effet · survole une carte pour la lire','F + click: ability · hover over a card to read it')}</p></div>`;
+    }
+    function counterName(kind) { return tr(kind,counterTypes.find(type=>type.key===kind)?.en || kind); }
+    function counterIcon(kind) {
+      const type=counterTypes.find(type=>type.key===kind);
+      return `<svg class="counter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${type?.path || 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-4 9h8m-4-4v8'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    function markerAction(uid,kind,remove=counterRemove) {
+      if(!manual || busy || !state || !publicArrowNodes().has('card:'+uid) || (localPlayer!==null && actor()!==localPlayer))return null;
+      return actions.find(action=>action.type===(remove?'marker-remove':'marker-add')&&action.sourceId===uid&&action.marker===kind&&action.player===actor()) || null;
+    }
+    function counterAvailable(kind,remove=counterRemove){return manual&&!busy&&(localPlayer===null||actor()===localPlayer)&&actions.some(action=>action.type===(remove?'marker-remove':'marker-add')&&action.marker===kind&&action.player===actor());}
+    function counterPaletteHtml() {
+      const enabled=manual&&!busy&&(localPlayer===null||actor()===localPlayer)&&actions.some(action=>['marker-add','marker-remove'].includes(action.type)), hint=manual?tr('Glisser sur une carte publique, ou choisir le marqueur puis la carte.','Drag onto a public card, or choose the counter then the card.'):tr('Mode automatisé : les effets ajoutent et retirent les marqueurs.','Automated mode: card effects add and remove counters.');
+      return `<div class="counter-palette" role="group" aria-label="${tr('Marqueurs','Counters')}" title="${escape(hint)}">${counterTypes.map(type=>`<button class="counter-tool counter-${type.key} ${counterTool===type.key?'selected':''}" data-game-counter-kind="${type.key}" aria-label="${escape((counterRemove?tr('Retirer un marqueur ','Remove a counter: '):tr('Ajouter un marqueur ','Add a counter: '))+counterName(type.key))}" title="${escape(counterName(type.key)+' · '+hint)}" aria-pressed="${counterTool===type.key}" draggable="false" ${counterAvailable(type.key)?'':'disabled'}>${counterIcon(type.key)}<span>${escape(counterName(type.key))}</span></button>`).join('')}<button class="counter-mode ${counterRemove?'selected':''}" data-game-command="counter-mode" aria-pressed="${counterRemove}" aria-label="${tr('Retirer des marqueurs','Remove counters')}" title="${tr('Basculer entre ajout et retrait de marqueurs','Switch between adding and removing counters')}" ${enabled?'':'disabled'}>${counterRemove?'−':'+'}</button></div>`;
+    }
+    function placeCounter(uid,kind=counterTool,remove=counterRemove) {
+      const action=markerAction(uid,kind,remove);if(!action)return false;
+      inspect(uid);return runAction({...action});
+    }
+    function communicationHtml() {
+      const entries=(state.log || []).slice(-250), author=localPlayer ?? chatAuthor ?? actor();
+      const connected=options.isConnected?.()!==false;
+      return `<section class="side-panel communications-panel" aria-label="${tr('Carnet et tchat','Log and chat')}" data-no-i18n><div class="panel-title">${tr('Carnet & tchat','Log & chat')}<button class="tiny-button feed-latest" data-game-command="feed-latest" ${feedUnread?'':'hidden'}>${tr('Nouveaux messages ↓','New messages ↓')}</button></div><div class="communication-feed history" role="log" aria-live="polite" aria-relevant="additions" aria-label="${tr('Historique public et messages des joueurs','Public history and player messages')}" tabindex="0">${entries.map((event,index)=>{
+        const chat=event?.kind==='chat' && [0,1].includes(event.player), text=typeof event==='string'?event:event.text || event.message || '';
+        if(chat)return `<article class="chat-entry ${event.player===author?'chat-own':''}" data-chat-player="${event.player}"><div class="chat-heading"><strong class="chat-name">${escape(state.players[event.player]?.name || tr('Joueur','Player'))}</strong><small class="chat-turn">${tr('Message','Message')} · ${Number.isFinite(event.turn)&&event.turn>0?tr('Tour','Turn')+' '+event.turn:tr('Préparation','Setup')}</small></div><p class="chat-message">${escape(text)}</p></article>`;
+        return `<div class="history-entry system-entry"><span aria-hidden="true">${String(index+1).padStart(2,'0')}</span><p>${escape(label(text))}</p></div>`;
+      }).join('') || `<p class="empty-note">${tr('Les actions de jeu et vos messages apparaîtront ici.','Game actions and your messages will appear here.')}</p>`}</div><form class="chat-form" data-game-chat-form>${localPlayer===null?`<select class="chat-author" data-game-chat-author aria-label="${tr('Écrire en tant que','Write as')}">${state.players.map((player,index)=>`<option value="${index}" ${index===author?'selected':''}>${escape(player.name)}</option>`).join('')}</select>`:''}<input class="chat-input" data-game-chat-input type="text" maxlength="500" autocomplete="off" aria-label="${tr('Message aux joueurs','Message to players')}" placeholder="${connected?tr('Écrire un message…','Write a message…'):tr('Connexion interrompue · brouillon conservé','Disconnected · draft kept')}" value="${escape(chatDraft)}"><button class="button chat-submit" type="submit" ${busy||chatBusy||!connected?'disabled':''}>${chatBusy?tr('Envoi…','Sending…'):tr('Envoyer','Send')}</button></form></section>`;
+    }
+    async function sendChat() {
+      if(busy||chatBusy||destroyed||!state||options.isConnected?.()===false)return;
+      const text=chatDraft.trim();if(!text)return;
+      const player=localPlayer ?? chatAuthor ?? actor();
+      busy=true;chatBusy=true;render();
+      try{
+        const result=await options.onAction?.({id:'chat:send',type:'chat',player,text});
+        if(result!==false && chatDraft.trim()===text)chatDraft='';
+      }catch(error){call('onError',error);}
+      finally{if(!destroyed){busy=false;chatBusy=false;render();}}
     }
     function stackHtml() {
       const entries=state.stack || [];
@@ -261,13 +308,14 @@
       const available = actions.some(action => action.sourceId === instance.uid && !['choose','skip'].includes(action.type));
       const draggable = inHand && legalPlayActions(instance.uid).length > 0 && dropKind(instance.uid);
       const arrowNode=!inHand&&publicArrowNodes().has('card:'+instance.uid)?'card:'+instance.uid:null;
-      const markers = Object.entries(instance.counters || {}).filter(([, value]) => value > 0).map(([key,value]) => `<span>${escape(key)} ${value}</span>`).join('');
-      return `<button class="game-card ${instance.tapped?'tapped':''} ${selected===instance.uid?'selected':''} ${available?'available':''} ${draggable?'playable-card':''} ${arrowMode&&arrowNode?'arrow-pickable':''} ${arrowOrigin===arrowNode&&arrowNode?'arrow-origin':''}" data-game-uid="${escape(instance.uid)}" data-game-preview-uid="${escape(instance.uid)}" ${arrowNode?`data-game-arrow-node="${escape(arrowNode)}"`:''} draggable="false" ${draggable?'data-game-draggable="true"':''} aria-label="${escape(card.name)}${instance.tapped?', '+tr('engagé','exhausted'):''}${creature?`, ${stats.remainingHp ?? card.hp} ${tr('PV restants','HP remaining')}`:''}" ${draggable?`title="${tr('Glisse cette carte vers sa zone de jeu, ou clique pour choisir une action.','Drag this card to its play area, or click to choose an action.')}"`:''}><img src="${escape(card.image)}" alt="${escape(card.name)}" draggable="false">${instance.tapped?`<span class="card-tap-label">${tr('ENGAGÉ','EXHAUSTED')}</span>`:''}${creature?`<span class="card-stats"><b>⚔ ${stats.force ?? card.force}</b><b class="${instance.damage?'hurt':''}">♥ ${stats.remainingHp ?? card.hp}</b></span>`:''}${markers?`<span class="card-counters">${markers}</span>`:''}${showOwner?`<span class="owner-pip">${tr('Camp','Side')} ${(instance.controller ?? instance.owner ?? 0)+1}</span>`:''}</button>`;
+      const counters=Object.entries(instance.counters || {}).filter(([,value])=>Number.isFinite(value)&&value>0);
+      const markers=counters.map(([key,value])=>`<span class="card-counter-badge counter-${escape(key)}" data-counter-kind="${escape(key)}" title="${escape(counterName(key)+': '+value)}" aria-label="${escape(counterName(key)+': '+value)}">${counterIcon(key)}${value>1?`<b>${value}</b>`:''}</span>`).join('');
+      return `<button class="game-card ${instance.tapped?'tapped':''} ${selected===instance.uid?'selected':''} ${available?'available':''} ${draggable?'playable-card':''} ${arrowMode&&arrowNode?'arrow-pickable':''} ${arrowOrigin===arrowNode&&arrowNode?'arrow-origin':''} ${counterTool&&markerAction(instance.uid,counterTool)?'counter-pickable':''}" data-game-uid="${escape(instance.uid)}" data-game-preview-uid="${escape(instance.uid)}" ${arrowNode?`data-game-arrow-node="${escape(arrowNode)}"`:''} draggable="false" ${draggable?'data-game-draggable="true"':''} aria-label="${escape(card.name)}${instance.tapped?', '+tr('engagé','exhausted'):''}${creature?`, ${stats.remainingHp ?? card.hp} ${tr('PV restants','HP remaining')}`:''}${counters.length?', '+escape(counters.map(([key,value])=>counterName(key)+' '+value).join(', ')):''}" ${draggable?`title="${tr('Glisse cette carte vers sa zone de jeu, ou clique pour choisir une action.','Drag this card to its play area, or click to choose an action.')}"`:''}><img src="${escape(card.image)}" alt="${escape(card.name)}" draggable="false">${instance.tapped?`<span class="card-tap-label">${tr('ENGAGÉ','EXHAUSTED')}</span>`:''}${creature?`<span class="card-stats"><b>⚔ ${stats.force ?? card.force}</b><b class="${instance.damage?'hurt':''}">♥ ${stats.remainingHp ?? card.hp}</b></span>`:''}${markers?`<span class="card-counters card-counter-badges">${markers}</span>`:''}${showOwner?`<span class="owner-pip">${tr('Camp','Side')} ${(instance.controller ?? instance.owner ?? 0)+1}</span>`:''}</button>`;
     }
     function rationsHtml(player) {
       const r = player.rations || {}, ready = Math.max(0,Math.min(12, r.ready || 0)), tapped = Math.max(0,Math.min(12, r.tapped || 0)), reserve = Math.max(0,Math.min(12, r.deck || 0));
       const ration = (spent, index) => `<div class="ration-card ${spent?'spent':''}" role="img" aria-label="${escape(tr('Ration','Ration')+' '+(index+1)+' · '+(spent?tr('engagée','exhausted'):tr('disponible','ready')))}"><img src="assets/game/ration.webp" alt="" draggable="false"></div>`;
-      return `<section class="ration-zone" aria-label="Rations" data-no-i18n><div class="ration-heading"><strong>RATIONS</strong><span><b>${ready}</b> ${tr('disponibles','ready')} · <b>${tapped}</b> ${tr('engagées','exhausted')}</span>${player.pool?`<span class="pool-chip">+${typeof player.pool==='number'?player.pool:0} ${tr('ressource du tour','turn resource')}</span>`:''}</div><div class="ration-layout"><div class="ration-reserve ${reserve?'':'empty'}" role="img" aria-label="${reserve} ${tr('rations en réserve','rations in reserve')}">${reserve?'<img src="assets/game/ration.webp" alt="" draggable="false">':'<span aria-hidden="true">∅</span>'}<b>${reserve}</b><small>${tr('Réserve','Reserve')}</small></div><div class="ration-cards">${Array.from({length:Math.max(0,ready)},(_,index)=>ration(false,index)).join('')}${Array.from({length:Math.max(0,Math.min(tapped,12-ready))},(_,index)=>ration(true,ready+index)).join('')}${!ready&&!tapped?`<p class="empty-note">${tr('Une ration est ajoutée automatiquement au début du tour.','A ration is added automatically at the beginning of the turn.')}</p>`:''}</div></div></section>`;
+      return `<section class="ration-zone" aria-label="Rations" data-no-i18n><div class="ration-heading"><strong>RATIONS</strong><span><b>${ready}</b> ${tr('disponibles','ready')} · <b>${tapped}</b> ${tr('engagées','exhausted')}</span>${player.pool?`<span class="pool-chip">+${typeof player.pool==='number'?player.pool:0} ${tr('ressource du tour','turn resource')}</span>`:''}</div><div class="ration-layout"><div class="ration-reserve ${reserve?'':'empty'}" role="img" aria-label="${reserve} ${tr('rations en réserve','rations in reserve')}">${reserve?'<img src="assets/game/ration.webp" alt="" draggable="false">':'<span aria-hidden="true">∅</span>'}<b>${reserve}</b><small>${tr('Réserve','Reserve')}</small></div><div class="ration-cards" style="--rations-count:${Math.max(1,ready+tapped)}">${Array.from({length:Math.max(0,ready)},(_,index)=>ration(false,index)).join('')}${Array.from({length:Math.max(0,Math.min(tapped,12-ready))},(_,index)=>ration(true,ready+index)).join('')}${!ready&&!tapped?`<p class="empty-note">${tr('Une ration est ajoutée automatiquement au début du tour.','A ration is added automatically at the beginning of the turn.')}</p>`:''}</div></div></section>`;
     }
     function zoneHtml(index) {
       const p = state.players[index], camp = p.camp || [], items = p.items || [];
@@ -284,7 +332,15 @@
     function render() {
       if (destroyed) return;
       shell.classList.toggle('effect-key-held',effectKey);
+      shell.classList.toggle('panels-open',panelsOpen);
       if (!state?.players?.length) { content.innerHTML = '<p class="empty-note">Le plateau se prépare…</p>'; i18n?.apply(content); return; }
+      const oldInput=content.querySelector('[data-game-chat-input]'), oldFeed=content.querySelector('.communication-feed');
+      const chatFocused=oldInput&&document.activeElement===oldInput, chatSelection=chatFocused?[oldInput.selectionStart,oldInput.selectionEnd]:null;
+      const feedTop=oldFeed?.scrollTop || 0, atBottom=!oldFeed || oldFeed.scrollHeight-oldFeed.clientHeight-feedTop<36;
+      const latestSignature=JSON.stringify((state.log || []).slice(-1));
+      if(oldFeed&&!atBottom&&feedSignature&&latestSignature!==feedSignature)feedUnread=true;
+      if(atBottom||forceFeedBottom)feedUnread=false;
+      feedSignature=latestSignature;
       const focusedCard = document.activeElement?.closest?.('[data-game-uid]');
       const focusedUid = focusedCard && shell.contains(focusedCard) ? focusedCard.dataset.gameUid : null;
       const current = actor(), me = localPlayer ?? 0, shownHand = handPlayer();
@@ -298,7 +354,7 @@
       const help = state.winner!=null?'La chasse est terminée. Tu peux consulter les cartes ou revenir au salon.':state.pending?.label || (waiting?'L’adversaire prépare son action. Sa main et l’ordre des decks restent cachés.':state.phase==='mulligan'?'Conserve cette main ou remplace-la une fois.':state.stack?.length?'Réponds à l’effet en attente ou passe pour poursuivre la résolution.':state.combat?'Le combat progresse par étapes. Joue un Réflexe disponible ou passe.':state.phase==='response'?state.flow==='start'?'Résous les effets de début du tour. Tu peux jouer un Réflexe ou passer pour continuer.':state.flow==='end'?'La fin du tour est annoncée. Tu peux jouer un Réflexe ou passer pour continuer.':'Une fenêtre de réponse est ouverte. Tu peux jouer un Réflexe ou passer pour continuer.':manual?'Sélectionne une carte pour agir. Applique les effets particuliers avec les commandes de la table.':'Sélectionne une carte de ta main pour la jouer, ou une carte du terrain pour agir.');
       const title = manual?'Table libre':localPlayer===null?'Test automatisé':'Partie directe';
       content.innerHTML = `
-        <div class="topline"><div><div class="eyebrow">Monster Hunter TCG</div><h1>${title}</h1><p>${manual?'Les effets particuliers des cartes sont à résoudre manuellement.':localPlayer===null?'Entraînement solo · Tu contrôles les décisions des deux camps.':'Connexion directe · Seule ta main est affichée.'}</p></div><div class="toolbar"><button class="button quiet" data-game-command="exit">← Retour</button>${options.onSave?'<button class="button" data-game-command="save">Enregistrer</button>':''}${options.onExport?'<button class="button" data-game-command="export">Exporter</button>':''}</div></div>
+        <div class="topline"><div><div class="eyebrow">Monster Hunter TCG</div><h1>${title}</h1><p>${manual?'Les effets particuliers des cartes sont à résoudre manuellement.':localPlayer===null?'Entraînement solo · Tu contrôles les décisions des deux camps.':'Connexion directe · Seule ta main est affichée.'}</p></div><div class="toolbar"><button class="button quiet" data-game-command="exit">← Retour</button>${options.onSave?'<button class="button" data-game-command="save">Enregistrer</button>':''}${options.onExport?'<button class="button" data-game-command="export">Exporter</button>':''}<button class="button arena-panel-toggle" data-game-command="panels" data-no-i18n aria-expanded="${panelsOpen}">${tr('Panneaux & tchat','Panels & chat')}</button></div></div>
         <div class="game-layout"><div class="board">
           ${state.winner!=null?`<div class="winner-banner">✦ <span data-no-i18n>${escape(state.players[state.winner]?.name || 'Partie terminée')}</span> remporte la chasse</div>`:''}
           ${scoreboardHtml()}
@@ -309,28 +365,44 @@
           <div class="board-scroll">${zoneHtml(1-me)}
             <section class="arena" data-game-drop="hunting" aria-label="Zone de chasse partagée">
               <div class="arena-heading">✧ Zone de chasse partagée ${state.hunting?.length?`· ${state.hunting.length}`:''}</div>
-              <div class="arena-cards">${state.hunting?.length?state.hunting.map(card=>cardHtml(card,true)).join(''):'<div class="arena-empty"><span class="arena-symbol">✧</span>La chasse commence ici<small>Joue des Monstres, puis chasse-les pour marquer des points.</small></div>'}</div>
+              <div class="arena-cards" style="--card-count:${Math.max(1,state.hunting?.length || 0)};--cards-count:${Math.max(1,state.hunting?.length || 0)}">${state.hunting?.length?state.hunting.map(card=>cardHtml(card,true)).join(''):'<div class="arena-empty"><span class="arena-symbol">✧</span>La chasse commence ici<small>Joue des Monstres, puis chasse-les pour marquer des points.</small></div>'}</div>
               <span class="drop-hint" data-no-i18n>${tr('Dépose un Monstre ici pour le jouer','Drop a Monster here to play it')}</span>
             </section>${zoneHtml(me)}
           </div>
-          <section class="hand-panel" aria-label="Main"><div class="hand-heading"><span>MAIN DE ${localPlayer===null?`<select data-game-hand-player aria-label="Main affichée"><option data-no-i18n value="auto" ${perspective===null?'selected':''}>${escape(state.players[current]?.name)} · ${escape(translated('automatique'))}</option><option data-no-i18n value="0" ${perspective===0?'selected':''}>${escape(state.players[0]?.name)}</option><option data-no-i18n value="1" ${perspective===1?'selected':''}>${escape(state.players[1]?.name)}</option></select>`:`<strong data-no-i18n>${escape(state.players[localPlayer]?.name)}</strong>`} · ${hand.length} cartes</span><button class="tiny-button" data-game-command="hand">${handHidden?'Afficher':'Masquer'} la main</button></div>
+          <section class="hand-panel" aria-label="Main" style="--hand-count:${Math.max(1,hand.length)}"><div class="hand-heading"><span>MAIN DE ${localPlayer===null?`<select data-game-hand-player aria-label="Main affichée"><option data-no-i18n value="auto" ${perspective===null?'selected':''}>${escape(state.players[current]?.name)} · ${escape(translated('automatique'))}</option><option data-no-i18n value="0" ${perspective===0?'selected':''}>${escape(state.players[0]?.name)}</option><option data-no-i18n value="1" ${perspective===1?'selected':''}>${escape(state.players[1]?.name)}</option></select>`:`<strong data-no-i18n>${escape(state.players[localPlayer]?.name)}</strong>`} · ${hand.length} cartes</span><button class="tiny-button" data-game-command="hand">${handHidden?'Afficher':'Masquer'} la main</button></div>
             <p class="hand-drag-hint" data-no-i18n>${tr('Glisse une carte jouable vers sa zone, ou clique dessus pour afficher ses actions.','Drag a playable card to its area, or click it to see its actions.')}</p>
-            <div class="hand-cards">${handHidden?'<p class="hand-empty">Main masquée. Clique sur « Afficher la main » pour consulter tes cartes.</p>':hand.length?hand.map(card=>cardHtml(card,false,true)).join(''):'<p class="hand-empty">Aucune carte en main.</p>'}</div>
+            <div class="hand-cards" style="--card-count:${Math.max(1,hand.length)};--cards-count:${Math.max(1,hand.length)}">${handHidden?'<p class="hand-empty">Main masquée. Clique sur « Afficher la main » pour consulter tes cartes.</p>':hand.length?hand.map(card=>cardHtml(card,false,true)).join(''):'<p class="hand-empty">Aucune carte en main.</p>'}</div>
           </section>
           <div class="play-dropzone" data-game-drop="effect" data-no-i18n><strong>${tr('Techniques et objets instantanés','Techniques and instant items')}</strong><span>${tr('Dépose la carte ici · les cibles seront proposées si nécessaire','Drop a card here · choose targets when required')}</span></div>
+          <div class="arena-mobile-actions">${primary.map(({a,index})=>actionHtml(a,index)).join('')}</div>
         </div><aside class="side-column">
+          <button class="button arena-panel-close" data-game-command="close-panels" data-no-i18n>${tr('Revenir au plateau','Back to the board')}</button>
           <section class="side-panel inspector-panel" tabindex="0" aria-label="${tr('Aperçu de la carte','Card preview')}" data-no-i18n>${inspectorHtml()}</section>
           <div class="game-command-column" tabindex="0" role="region" aria-label="${tr('Actions et historique','Actions and history')}">
           <section class="side-panel actions-panel"><div class="panel-title">${waiting?'L’adversaire joue':'À vous de jouer'} <span class="phase-pill">Camp ${current+1}</span></div><p class="actor-label" data-no-i18n>${escape(state.players[current]?.name)}</p><p class="action-description" data-no-i18n>${escape(label(help))}</p><div class="action-list">${primary.map(({a,index})=>actionHtml(a,index)).join('')}</div>
             ${selectedCard?`<div class="selection-title"><img src="${escape(selectedCard.image)}" alt=""><span data-no-i18n>${escape(selectedCard.name)}</span><button class="icon-button" data-game-command="unselect" aria-label="Désélectionner">×</button></div><div class="action-list">${specific.map(({a,index})=>actionHtml(a,index)).join('') || '<p class="empty-note">Aucune action disponible pour cette carte à cet instant.</p>'}</div><button class="button quiet full" data-game-detail="${selectedCard.id}">Lire la carte</button>`:''}
             ${tools.length?`<details class="table-tools"><summary data-no-i18n>${tr('Commandes de la table','Table commands')} <small>${tools.length}</small></summary><div class="action-list">${tools.map(({a,index})=>actionHtml(a,index)).join('')}</div></details>`:''}
           </section>
-          <section class="side-panel history-panel"><div class="panel-title">Carnet de chasse <small>${state.log?.length || 0} événements</small></div><div class="history" aria-label="${tr('Historique public de la partie','Public game history')}">${(state.log || []).slice(-250).reverse().map((event,index)=>`<div class="history-entry"><span>${((state.log?.length || 0)-index).toString().padStart(2,'0')}</span><p data-no-i18n>${escape(label(typeof event==='string'?event:event.text || event.message))}</p></div>`).join('') || '<p class="empty-note">Les événements publics de la partie apparaîtront ici.</p>'}</div></section>
-          <p class="tips"><strong>${manual?'Table libre':'À savoir'}</strong>${manual?'Les mouvements, compteurs et points sont partagés ; les joueurs appliquent les capacités particulières en lisant les cartes.':localPlayer===null?'Tu contrôles les deux camps. Le panneau indique qui doit agir. Survole une carte pour la lire et clique dessus pour ses actions.':'Les décisions autorisées apparaissent quand c’est à toi de jouer. Une déconnexion suspend les échanges.'}</p>
+          ${communicationHtml()}
           </div>
         </aside></div>`;
       i18n?.apply(content);
+      // Les rangées partagent leur largeur entre les cartes au lieu de créer
+      // une surface de jeu qui dépasse le bord du plateau.
+      [...content.querySelectorAll('.player-zone')].forEach((zone,position)=>{
+        const own=position===1;
+        zone.classList.toggle('local-zone',own);zone.classList.toggle('opponent-zone',!own);
+        zone.setAttribute('data-zone-player',String(own?me:1-me));
+      });
+      for(const row of content.querySelectorAll('.camp-slots,.item-row')){
+        const count=Math.max(1,row.querySelectorAll?.('.game-card,.empty-slot').length || 0);
+        row.style.setProperty?.('--cards-count',count);row.style.setProperty?.('--card-count',count);
+      }
       if (focusedUid) [...content.querySelectorAll('[data-game-uid]')].find(card=>card.dataset.gameUid===focusedUid)?.focus?.({preventScroll:true});
+      const newInput=content.querySelector('[data-game-chat-input]'), newFeed=content.querySelector('.communication-feed');
+      if(chatFocused&&newInput){newInput.focus?.({preventScroll:true});if(chatSelection?.every(Number.isFinite))newInput.setSelectionRange?.(...chatSelection);}
+      if(newFeed)newFeed.scrollTop=atBottom||forceFeedBottom?newFeed.scrollHeight:feedTop;
+      forceFeedBottom=false;
       queueArrows();
     }
     function showDialog(title, body, footer = '', view = null) {
@@ -366,8 +438,12 @@
     function onClick(event) {
       const target = event.target.closest('button'); if (!target || !shell.contains(target)) return;
       const data = target.dataset;
-      if (data.gameUid && Date.now() < suppressClickUntil) { event.preventDefault(); return; }
+      if ((data.gameUid || data.gameCounterKind) && Date.now() < suppressClickUntil) { event.preventDefault(); return; }
       if (target.hasAttribute('data-game-close')) return closeDialog();
+      if(data.gameCounterKind){
+        if(!counterTypes.some(type=>type.key===data.gameCounterKind)||!counterAvailable(data.gameCounterKind))return;
+        clearDrag();effectKey=false;arrowMode=false;arrowOrigin=null;counterTool=counterTool===data.gameCounterKind?null:data.gameCounterKind;render();return;
+      }
       if (data.gameCommand) {
         switch (data.gameCommand) {
           case 'exit': call('onExit'); return;
@@ -375,10 +451,15 @@
           case 'export': call('onExport', state); return;
           case 'hand': handHidden=!handHidden; render(); return;
           case 'unselect': selected=null; render(); return;
-          case 'arrow': if(busy)return; clearDrag(); effectKey=false; arrowMode=!arrowMode; arrowOrigin=null; render(); return;
+          case 'panels': panelsOpen=!panelsOpen;render();return;
+          case 'close-panels':panelsOpen=false;render();return;
+          case 'feed-latest':forceFeedBottom=true;feedUnread=false;render();return;
+          case 'counter-mode':if(!manual||busy)return;clearDrag();counterRemove=!counterRemove;render();return;
+          case 'arrow': if(busy)return; clearDrag(); counterTool=null;effectKey=false; arrowMode=!arrowMode; arrowOrigin=null; render(); return;
           case 'clear-arrows': if(busy)return; arrowOrigin=null; return runAction({id:'arrow:clear',type:'annotation',player:localPlayer ?? actor()});
         }
       }
+      if(counterTool&&data.gameUid&&!dialog.open){event.preventDefault();placeCounter(data.gameUid);return;}
       if (arrowMode && (data.gameArrowNode || data.gameUid || data.gameStack)) { event.preventDefault(); if(data.gameArrowNode)chooseArrow(data.gameArrowNode); return; }
       if (data.gameUid && effectKey && !dialog.open && !event.ctrlKey && !event.altKey && !event.metaKey) { event.preventDefault();activateEffect(data.gameUid);return; }
       if (data.gameStack) { if(data.gamePreviewUid)inspect(data.gamePreviewUid); return; }
@@ -428,7 +509,12 @@
         const available=legalPlayActions(view.uid);if(available.length)showPlayChoices(view.uid,available);else closeDialog();
       }
     }
-    function onChange(event) { if (localPlayer===null && event.target.hasAttribute('data-game-hand-player')) { perspective=event.target.value==='auto'?null:Number(event.target.value);render(); } }
+    function onChange(event) {
+      if(localPlayer===null&&event.target.hasAttribute('data-game-chat-author')){chatAuthor=Number(event.target.value)===1?1:0;return;}
+      if (localPlayer===null && event.target.hasAttribute('data-game-hand-player')) { perspective=event.target.value==='auto'?null:Number(event.target.value);render(); }
+    }
+    function onInput(event){if(event.target.hasAttribute?.('data-game-chat-input'))chatDraft=String(event.target.value || '').slice(0,500);}
+    function onSubmit(event){if(!event.target.hasAttribute?.('data-game-chat-form'))return;event.preventDefault();sendChat();}
     function onOver(event) {
       const target=event.target.closest('[data-game-preview-uid]');
       if(target && !dialog.open) inspect(target.dataset.gamePreviewUid);
@@ -491,8 +577,8 @@
       stopDragScroll();
       // La capture est relâchée aussi lors d'Échap ou d'une mise à jour distante.
       if (touchDrag) { try { touchDrag.source.releasePointerCapture?.(touchDrag.id); } catch {} }
-      dragUid = null;
-      for (const node of content.querySelectorAll('.dragging, .drop-ready, .drop-active')) node.classList.remove('dragging','drop-ready','drop-active');
+      dragUid = null;dragCounter=null;
+      for (const node of content.querySelectorAll('.dragging, .drop-ready, .drop-active,.counter-drop-ready,.counter-drop-active')) node.classList.remove('dragging','drop-ready','drop-active','counter-drop-ready','counter-drop-active');
       dragGhost?.remove(); dragGhost = null; touchDrag = null;
     }
     function playFromDrop(uid, target) {
@@ -511,9 +597,16 @@
       event.preventDefault();
     }
     function onPointerDown(event) {
+      const counter=event.target.closest('[data-game-counter-kind]');
+      if(counter){
+        if(dialog.open||event.isPrimary===false||event.button>0||!counterTypes.some(type=>type.key===counter.dataset.gameCounterKind)||!counterAvailable(counter.dataset.gameCounterKind))return;
+        if(touchDrag&&touchDrag.id!==event.pointerId)return;
+        counter.focus?.({preventScroll:true});
+        touchDrag={kind:'counter',marker:counter.dataset.gameCounterKind,remove:counterRemove,id:event.pointerId,x:event.clientX,y:event.clientY,source:counter,active:false};return;
+      }
       const target = event.target.closest('[data-game-preview-uid]');
       if (target && !dialog.open) inspect(target.dataset.gamePreviewUid);
-      if (effectKey || arrowMode || dialog.open || event.isPrimary === false || event.button > 0 || !target?.hasAttribute('data-game-draggable')) return;
+      if (effectKey || arrowMode || counterTool || dialog.open || event.isPrimary === false || event.button > 0 || !target?.hasAttribute('data-game-draggable')) return;
       if (touchDrag && touchDrag.id !== event.pointerId) return;
       if (!legalPlayActions(target.dataset.gameUid).length) return;
       target.focus?.({preventScroll:true});
@@ -523,26 +616,33 @@
       if (!touchDrag || touchDrag.id !== event.pointerId) return;
       if (!touchDrag.active) {
         if (Math.hypot(event.clientX-touchDrag.x,event.clientY-touchDrag.y)<9) return;
-        if (!startDrag(touchDrag.uid)) return clearDrag();
+        if(touchDrag.kind==='counter'){
+          dragCounter={marker:touchDrag.marker,remove:touchDrag.remove};effectKey=false;arrowMode=false;arrowOrigin=null;
+          for(const card of content.querySelectorAll('[data-game-uid]'))card.classList.toggle('counter-drop-ready',Boolean(markerAction(card.dataset.gameUid,dragCounter.marker,dragCounter.remove)));
+        }else if (!startDrag(touchDrag.uid)) return clearDrag();
         touchDrag.active = true;
         touchDrag.source.setPointerCapture?.(event.pointerId);
-        dragGhost = document.createElement('img'); dragGhost.className = 'card-drag-ghost';
-        dragGhost.src = definition(inspectable(touchDrag.uid))?.image || '';
-        dragGhost.alt = ''; dragGhost.setAttribute('aria-hidden','true');
-        Object.assign(dragGhost.style,{position:'fixed',width:'105px',pointerEvents:'none',zIndex:'10000',opacity:'.85',borderRadius:'8px',transform:'translate(-50%, -65%)'});
+        dragGhost = document.createElement(dragCounter?'div':'img'); dragGhost.className = dragCounter?'counter-drag-ghost counter-'+dragCounter.marker:'card-drag-ghost';
+        if(dragCounter)dragGhost.innerHTML=counterIcon(dragCounter.marker);
+        else{dragGhost.src = definition(inspectable(touchDrag.uid))?.image || '';dragGhost.alt = '';}
+        dragGhost.setAttribute('aria-hidden','true');
+        Object.assign(dragGhost.style,{position:'fixed',width:dragCounter?'38px':'105px',pointerEvents:'none',zIndex:'10000',opacity:'.85',borderRadius:'8px',transform:'translate(-50%, -65%)'});
         shell.appendChild(dragGhost);
       }
       event.preventDefault();
       touchDrag.pointerX=event.clientX;touchDrag.pointerY=event.clientY;
       dragGhost.style.left=event.clientX+'px';dragGhost.style.top=event.clientY+'px';
-      markDrop(document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-game-drop]'));
-      queueDragScroll();
+      if(dragCounter){
+        const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-game-uid]');
+        for(const card of content.querySelectorAll('[data-game-uid]'))card.classList.toggle('counter-drop-active',card===target&&Boolean(markerAction(card.dataset.gameUid,dragCounter.marker,dragCounter.remove)));
+        if(target&&markerAction(target.dataset.gameUid,dragCounter.marker,dragCounter.remove))inspect(target.dataset.gameUid);
+      }else{markDrop(document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-game-drop]'));queueDragScroll();}
     }
     function onPointerUp(event) {
       if (!touchDrag || touchDrag.id !== event.pointerId) return;
-      const uid=touchDrag.uid,active=touchDrag.active,target=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-game-drop]');
+      const uid=touchDrag.uid,active=touchDrag.active,counter=dragCounter,target=document.elementFromPoint(event.clientX,event.clientY)?.closest(counter?'[data-game-uid]':'[data-game-drop]');
       clearDrag();
-      if (active) { event.preventDefault();suppressClickUntil=Date.now()+400;playFromDrop(uid,target); }
+      if (active) { event.preventDefault();suppressClickUntil=Date.now()+400;if(counter){if(target)placeCounter(target.dataset.gameUid,counter.marker,counter.remove);}else playFromDrop(uid,target); }
     }
     function onPointerCancel(event) {
       if (touchDrag && touchDrag.id === event.pointerId) clearDrag();
@@ -554,22 +654,22 @@
       if(event.key==='Escape') {
         if(dialog.open){effectKey=false;arrowOrigin=null;clearDrag();render();return;}
         if(touchDrag){event.preventDefault();clearDrag();suppressClickUntil=Date.now()+400;}
-        if(effectKey||arrowMode||arrowOrigin){event.preventDefault();effectKey=false;arrowMode=false;arrowOrigin=null;render();}
+        if(effectKey||arrowMode||arrowOrigin||counterTool||panelsOpen){event.preventDefault();effectKey=false;arrowMode=false;arrowOrigin=null;counterTool=null;panelsOpen=false;render();}
         return;
       }
       if(String(event.key || '').toLowerCase()!=='f' || event.ctrlKey || event.altKey || event.metaKey || event.isComposing || editing(event.target) || dialog.open || busy || effectKey)return;
-      event.preventDefault();clearDrag();effectKey=true;arrowMode=false;arrowOrigin=null;render();
+      event.preventDefault();clearDrag();counterTool=null;effectKey=true;arrowMode=false;arrowOrigin=null;render();
     }
     function onKeyUp(event) {
       if(String(event.key || '').toLowerCase()==='f'&&effectKey){effectKey=false;render();}
     }
     function onWindowBlur() {
-      const active=effectKey||arrowMode||arrowOrigin||touchDrag;
-      effectKey=false;arrowMode=false;arrowOrigin=null;clearDrag();
+      const active=effectKey||arrowMode||arrowOrigin||touchDrag||counterTool;
+      effectKey=false;arrowMode=false;arrowOrigin=null;counterTool=null;clearDrag();
       if(active)render();
     }
     function onCancel() { modalAction=null;targetSelection=[];modalView=null; }
-    const listeners = {click:onClick,change:onChange,pointerover:onOver,focusin:onOver,dragstart:onDragStart,pointerdown:onPointerDown,pointermove:onPointerMove,pointerup:onPointerUp,pointercancel:onPointerCancel,keydown:onKeyDown,keyup:onKeyUp};
+    const listeners = {click:onClick,change:onChange,input:onInput,submit:onSubmit,pointerover:onOver,focusin:onOver,dragstart:onDragStart,pointerdown:onPointerDown,pointermove:onPointerMove,pointerup:onPointerUp,pointercancel:onPointerCancel,keydown:onKeyDown,keyup:onKeyUp};
     for (const [name, handler] of Object.entries(listeners)) shell.addEventListener(name,handler,name==='pointermove'?{passive:false}:false);
     dialog.addEventListener('cancel',onCancel);
     shell.addEventListener('load',queueArrows,true);
@@ -586,6 +686,7 @@
         clearDrag();
         arrowOrigin=null;
         state=nextState;actions=Array.isArray(nextActions)?nextActions:[];
+        if(counterTool&&!counterAvailable(counterTool))counterTool=null;
         if(selected && !find(selected))selected=null;
         // Une action distante peut rendre une sélection ouverte périmée.
         if(dialog.open && modalAction && !actions.some(action=>action.id===modalAction.id))closeDialog();
