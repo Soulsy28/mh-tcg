@@ -1,6 +1,6 @@
 # MH TCG La Guilde des chasseurs
 
-Version 0.7.0 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
+Version 0.7.1 du site pour construire ses decks, tester le jeu seul et établir une partie directe entre deux navigateurs. Le site utilise les règles et les cartes actuelles ; l'ancien fichier card_data.json n'est pas utilisé.
 
 La carte 202, Silas, utilise les nouvelles illustrations françaises et anglaises fournies par le créateur. Une fois par tour, Manger ou renvoyer une carte du terrain dans la main de son propriétaire déclenche un soin de 1 blessure à un Chasseur ou un Monstre allié ciblé. Son identifiant reste 202 et les decks existants conservent leur Chef.
 
