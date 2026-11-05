@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const C = require('../dist/catalog.js');
+const E = require('../dist/engine.js');
 const T = require('../dist/table.js');
 const I = require('../dist/i18n.js');
 const source = fs.readFileSync(require.resolve('../dist/game-ui.js'), 'utf8');
@@ -399,7 +400,7 @@ test('les deux points de chasse sont mis en évidence et la vue attend la confir
   let finish;const h=harness({localPlayer:0,onAction:()=>new Promise(resolve=>{finish=resolve;})});
   const a=fieldCard(h,'item','022'),b=fieldCard(h,'hunter','014',1);h.state.players[0].score=5;h.state.players[1].score=3;h.update([]);
   assert.match(h.content.innerHTML,/scoreboard-value">5<small> \/ 6/);assert.match(h.content.innerHTML,/scoreboard-value">3<small> \/ 6/);
-  assert.match(h.content.innerHTML,/scoreboard-player active/);
+  assert.match(h.content.innerHTML,/class="[^"]*\bscoreboard-player\b[^"]*\bactive\b/);
   h.event('click',{gameCommand:'arrow'});h.event('click',{gameUid:a.uid,gameArrowNode:'card:'+a.uid});h.event('click',{gameUid:b.uid,gameArrowNode:'card:'+b.uid});
   assert.match(h.content.innerHTML,/arrow-tool[^>]+disabled/);assert.equal(typeof finish,'function');
   finish();await settle();assert(!/arrow-tool[^>]+disabled/.test(h.content.innerHTML));
@@ -510,5 +511,109 @@ test('annuler le marqueur ou recevoir une mise à jour distante ne pose rien au 
 test('les panneaux compacts s’ouvrent et se referment sans masquer ni révéler une autre main',()=>{
   const h=harness({localPlayer:0}),enemy=h.card('hunter',1);h.update();h.event('click',{gameCommand:'panels'});assert.match(h.content.innerHTML,/arena-panel-toggle[^>]+aria-expanded="true"/);
   h.event('keydown',{}, {key:'Escape'});assert.match(h.content.innerHTML,/arena-panel-toggle[^>]+aria-expanded="false"/);
-  assert(!h.content.innerHTML.includes('data-game-preview-uid="'+enemy.uid+'"'));assert.match(h.content.innerHTML,/arena-mobile-actions/);
+  assert(!h.content.innerHTML.includes('data-game-preview-uid="'+enemy.uid+'"'));assert.match(h.content.innerHTML,/turn-controls/);
+});
+
+test('une réserve vide permet encore de manger et les points ciblent le camp cliqué', async () => {
+  const h = harness({localPlayer: 0});
+  h.state.players[0].rations = {ready: 11, tapped: 1, deck: 0};
+  h.state.players[0].score = 2;
+  h.update();
+
+  assert.doesNotMatch(h.content.innerHTML, /Manger 1 ration|Ajouter 1 point au camp/);
+  h.event('click', {gameContext: 'rations', gamePlayer: '1'});
+  assert.equal(h.dialog.open, false, 'la réserve adverse ne donne aucune commande');
+
+  h.event('click', {gameContext: 'rations', gamePlayer: '0'});
+  assert(h.dialog.open);
+  assert.doesNotMatch(h.dialog.innerHTML, /data-game-candidate="ration-add"/);
+  assert.match(h.dialog.innerHTML, /data-game-candidate="eat"/);
+  h.event('click', {gameCandidate: 'eat'});
+  h.event('click', {gameChoice: '1'});
+  await settle();
+  const eaten = T.dispatch(h.state, h.sent[0], C);
+  assert.deepEqual(eaten.players[0].rations, {ready: 11, tapped: 0, deck: 1});
+  assert.equal(h.state.players[0].rations.deck, 0, 'la vue délègue sans muter la partie');
+
+  h.event('click', {gameContext: 'score', gamePlayer: '1'});
+  assert(h.dialog.open);
+  assert.doesNotMatch(h.dialog.innerHTML, /data-game-candidate="score-down"/);
+  h.event('click', {gameCandidate: 'score-up'});
+  await settle();
+  const scored = T.dispatch(h.state, h.sent[1], C);
+  assert.deepEqual(scored.players.map(player => player.score), [2, 1]);
+
+  h.event('click', {gameContext: 'rations', gamePlayer: '0'});
+  h.event('click', {gameCandidate: 'eat'});
+  h.state.priorityPlayer = 1;
+  h.update([]);
+  assert.equal(h.dialog.open, false);
+  h.event('click', {gameChoice: '1'});
+  await settle();
+  assert.equal(h.sent.length, 2, 'un choix périmé ne déclenche aucune action');
+});
+
+test('le bandeau Combat attend le choix du Chasseur et une cible encore légale', async () => {
+  const h = harness();
+  const hunter = fieldCard(h, 'hunter', '014');
+  const monster = fieldCard(h, 'large', '001', 1);
+  const attack = 'attack:' + hunter.uid;
+  h.update();
+
+  const controls = h.content.innerHTML.match(/class="turn-controls"[^>]*>([\s\S]*?)<\/section>/)?.[1] || '';
+  assert.match(controls, /data-game-context="combat"/);
+  assert.match(controls, /Terminer le tour/);
+  h.event('click', {gameContext: 'combat'});
+  assert.match(h.dialog.innerHTML, new RegExp(`data-game-candidate="${attack}"`));
+  h.event('click', {gameCandidate: attack});
+  h.event('click', {gameTarget: '0'});
+  assert.equal(h.sent.length, 0, 'ouvrir le combat et choisir une cible ne déclare rien');
+
+  h.state.hunting = [];
+  const replacement = fieldCard(h, 'large', '001', 1);
+  assert(T.getActions(h.state, C).some(action => action.id === attack), 'le même Chasseur peut encore attaquer');
+  h.update();
+  assert.equal(h.dialog.open, false);
+  h.event('click', {gameConfirmTargets: ''});
+  await settle();
+  assert.equal(h.sent.length, 0);
+
+  h.event('click', {gameContext: 'combat'});
+  h.event('click', {gameCandidate: attack});
+  h.event('click', {gameTarget: '0'});
+  h.event('click', {gameConfirmTargets: ''});
+  await settle();
+  assert.equal(h.sent.length, 1);
+  const next = T.dispatch(h.state, h.sent[0], C);
+  assert.equal(next.combat.attackerId, hunter.uid);
+  assert.notEqual(next.combat.targetId, monster.uid);
+  assert.equal(next.combat.targetId, replacement.uid);
+  assert.equal(next.combat.stage, 'interpose');
+});
+
+test('le bandeau permet au camp désigné de répondre à une décision du moteur automatisé', async () => {
+  const h = harness({localPlayer: 1, mode: 'auto', engine: E});
+  const state = E.createScenario(C);
+  const card = state.players[1].hand[0];
+  state.pending = {
+    id: 'discard-choice', kind: 'discard', player: 1, label: 'Choisis une carte à défausser',
+    targets: [{id: card.uid, label: 'Carte à défausser'}], targetCount: 1, targetMin: 1
+  };
+  assert.equal(state.priorityPlayer, 0);
+  const actions = E.getActions(state, C);
+  const index = actions.findIndex(action => action.type === 'choose');
+  h.ui.update(state, actions);
+
+  const controls = h.content.innerHTML.match(/class="turn-controls"[^>]*>([\s\S]*?)<\/section>/)?.[1] || '';
+  assert.match(controls, /Choisis une carte à défausser/);
+  h.event('click', {gameAction: String(index)});
+  assert(h.dialog.open);
+  h.event('click', {gameTarget: '0'});
+  h.event('click', {gameConfirmTargets: ''});
+  await settle();
+
+  assert.equal(h.sent[0].player, 1);
+  const next = E.dispatch(state, h.sent[0], C);
+  assert.equal(next.players[1].discard[0].uid, card.uid);
+  assert.equal(next.pending, null);
 });
