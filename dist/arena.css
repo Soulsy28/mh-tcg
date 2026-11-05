@@ -28,13 +28,17 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
 .game-mount .arena-match .toolbar{gap:5px;flex-wrap:nowrap}
 .game-mount .arena-match .toolbar .button{padding:4px 9px;min-height:28px;font-size:11px}
 .game-mount .arena-match .game-layout{height:100%;min-height:0;min-width:0;grid-template-columns:minmax(0,1fr) clamp(275px,23vw,345px);gap:8px;padding:0;align-items:stretch}
-.game-mount .arena-match .board{position:relative;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 132px;grid-template-rows:48px 22px 26px 38px minmax(0,1fr) clamp(110px,15dvh,150px);grid-template-areas:'score score' 'meta meta' 'phase phase' 'tools tools' 'field stack' 'hand hand';border-radius:6px;overflow:hidden;box-shadow:0 3px 16px #18252225,inset 0 0 0 1px #b0945d40}
+.game-mount .arena-match .board{position:relative;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 132px;grid-template-rows:48px 22px 26px auto 38px minmax(0,1fr) clamp(110px,15dvh,150px);grid-template-areas:'score score' 'meta meta' 'phase phase' 'turn turn' 'tools tools' 'field stack' 'hand hand';border-radius:6px;overflow:hidden;box-shadow:0 3px 16px #18252225,inset 0 0 0 1px #b0945d40}
 .game-mount .arena-match .scoreboard{grid-area:score;min-height:0;border-bottom-width:1px}
 .game-mount .arena-match .scoreboard-player{padding:5px 12px;gap:0 10px;grid-template-rows:1fr 1fr}
+.game-mount .arena-match .hunt-score{background-color:transparent;text-align:left}
+.game-mount .arena-match .hunt-score:not(:disabled,[aria-disabled='true']):hover{background-color:#d1b67927}
+.game-mount .arena-match .hunt-score:disabled,.game-mount .arena-match .hunt-score[aria-disabled='true']{opacity:1;cursor:default}
+.game-mount .arena-match .hunt-score:not(:disabled,[aria-disabled='true']) .scoreboard-goal::after{content:'';display:inline-block;width:5px;height:5px;margin-left:6px;border:solid #e4c880;border-width:0 1px 1px 0;transform:translateY(-2px) rotate(45deg)}
 .game-mount .arena-match .scoreboard-name{font-size:12px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .game-mount .arena-match .scoreboard-value{font-size:35px;line-height:1;text-shadow:none}
 .game-mount .arena-match .scoreboard-value small{font-size:14px}
-.game-mount .arena-match .scoreboard-goal{font-size:9px;line-height:1.2;white-space:nowrap}
+.game-mount .arena-match .scoreboard-goal{font-size:9px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .game-mount .arena-match .board-meta{grid-area:meta;padding:2px 10px;font-size:10px;line-height:1.2;gap:8px;flex-wrap:nowrap;min-width:0;letter-spacing:0}
 .game-mount .arena-match .turn-mark{gap:6px;flex-wrap:nowrap;min-width:0}
 .game-mount .arena-match .turn-mark>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -42,6 +46,15 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
 .game-mount .arena-match .phase-track{grid-area:phase;padding:2px 7px;gap:3px;overflow:visible;border-bottom-width:1px}
 .game-mount .arena-match .phase-step{flex:1 1 0;min-width:0;padding:2px 5px;font-size:10px;gap:5px;border-radius:3px}
 .game-mount .arena-match .phase-step b{width:16px;height:16px;font-size:9px;border-width:1px}
+.game-mount .arena-match .turn-controls{grid-area:turn;display:flex;align-items:center;gap:8px;min-width:0;padding:4px 7px;background:#1b3338;border-bottom:1px solid #b8a16b50;color:#f0e3c2}
+.game-mount .arena-match .turn-label{font-size:10px;font-weight:650;line-height:1.2}
+.game-mount .arena-match .turn-actions{display:flex;align-items:stretch;flex:1;flex-wrap:wrap;gap:4px;min-width:0}
+.game-mount .arena-match .turn-status{align-self:center;min-width:0;font-size:10px;overflow-wrap:anywhere}
+.game-mount .arena-match .turn-controls .turn-action{width:auto;min-width:0;max-width:100%;min-height:25px;padding:3px 9px;border:1px solid #ad9568;border-radius:3px;background:#2e484c;color:#f7eed4;font-size:11px;font-weight:650;line-height:1.25;text-align:center;white-space:normal}
+.game-mount .arena-match .turn-action:not(:disabled):hover{background:#425d61;border-color:#e4c783}
+.game-mount .arena-match .turn-controls .turn-action-primary{background:#d9bd7e;border-color:#e9ce8e;color:#24383a}
+.game-mount .arena-match .turn-action-primary:not(:disabled):hover{background:#ecd49c}
+.game-mount .arena-match :is(.turn-action,.hunt-score,.ration-reserve):focus-visible{outline:2px solid #f0d793;outline-offset:-2px}
 .game-mount .arena-match .board-tools{grid-area:tools;padding:3px 7px;gap:5px 8px;min-width:0;flex-wrap:nowrap;position:relative;z-index:11}
 .game-mount .arena-match .board-tools .button{min-height:28px;padding:3px 7px;font-size:10px;gap:4px;white-space:nowrap}
 .game-mount .arena-match .arrow-controls{display:flex;align-items:center;gap:4px;flex:0 0 auto}
@@ -92,9 +105,13 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
 .game-mount .arena-match .ration-heading strong{font-size:8px;letter-spacing:.5px}
 .game-mount .arena-match .ration-heading>span{white-space:nowrap}
 .game-mount .arena-match .ration-layout{flex:1;min-width:0;min-height:0;height:20px;gap:10px}
-.game-mount .arena-match .ration-reserve{height:20px;flex:0 0 24px;display:block;font-size:8px}
-.game-mount .arena-match .ration-reserve img{width:13px;height:18px;border-radius:2px;box-shadow:2px 0 0 #9d8450}
-.game-mount .arena-match .ration-reserve>b{position:absolute;left:15px;top:5px;font-size:9px;color:#f3e4b9}
+.game-mount .arena-match .ration-reserve{height:20px;flex:0 0 33px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:3px;padding:0 2px;border:1px solid #bca26466;border-radius:3px;background:#12282f66;font-size:8px}
+.game-mount .arena-match .ration-reserve img{flex:none;width:13px;height:18px;border-radius:2px;box-shadow:1px 0 0 #9d8450}
+.game-mount .arena-match .ration-reserve>b{font-size:9px;line-height:1;color:#f3e4b9}
+.game-mount .arena-match .ration-reserve>span{font-size:11px;line-height:1}
+.game-mount .arena-match .ration-reserve.empty{opacity:1}
+.game-mount .arena-match .ration-reserve:not(:disabled,[aria-disabled='true']):hover{border-color:#e4c783;background:#3d544e}
+.game-mount .arena-match .ration-reserve:disabled,.game-mount .arena-match .ration-reserve[aria-disabled='true']{opacity:.8;cursor:default;border-color:transparent;background:transparent}
 .game-mount .arena-match .ration-reserve>small{display:none}
 .game-mount .arena-match .ration-cards{height:20px;min-height:0;flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
 .game-mount .arena-match .ration-card{width:13px;height:18px;flex:0 1 13px;min-width:6px}
@@ -217,9 +234,15 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
 .counter-drag-ghost svg{width:23px;height:23px}
 .game-mount .arena-match .winner-banner{position:absolute;top:49px;left:0;right:0;z-index:14;padding:5px 12px;font-size:15px;line-height:1.3;background:#dcc17deF;box-shadow:0 2px 7px #13272966}
 .game-mount .arena-match .tips{display:none}
-.game-mount .arena-match .arena-panel-toggle,.game-mount .arena-match .arena-panel-close,.game-mount .arena-match .arena-mobile-actions{display:none}
+.game-mount .arena-match .arena-panel-toggle,.game-mount .arena-match .arena-panel-close{display:none}
+.game-mount .arena-match .mh-game-dialog:has(.context-actions){width:min(460px,calc(100vw - 24px))}
+.game-mount .arena-match .context-actions{display:grid;gap:6px}
+.game-mount .arena-match .context-actions .game-action{min-height:39px;padding:8px 10px;font-size:13px}
+.game-mount .arena-match .context-summary{margin-bottom:12px;font-size:12px;line-height:1.4}
 @media(min-width:1600px) and (min-height:850px){
-  .game-mount .arena-match .board{grid-template-columns:minmax(0,1fr) 150px;grid-template-rows:54px 25px 30px 40px minmax(0,1fr) clamp(125px,15dvh,160px)}
+  .game-mount .arena-match .board{grid-template-columns:minmax(0,1fr) 150px;grid-template-rows:54px 25px 30px auto 40px minmax(0,1fr) clamp(125px,15dvh,160px)}
+  .game-mount .arena-match .turn-controls .turn-action{min-height:29px;padding-inline:11px;font-size:12px}
+  .game-mount .arena-match .turn-label{font-size:11px}
   .game-mount .arena-match .scoreboard-value{font-size:40px}
   .game-mount .arena-match .scoreboard-name{font-size:14px}
   .game-mount .arena-match .scoreboard-goal{font-size:10px}
@@ -268,7 +291,9 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
   .game-mount .arena-match .topline{height:26px}
   .game-mount .arena-match .topline h1{font-size:16px}
   .game-mount .arena-match .toolbar .button{min-height:24px;padding:2px 7px;font-size:10px}
-  .game-mount .arena-match .board{grid-template-rows:40px 18px 22px 32px minmax(0,1fr) 90px}
+  .game-mount .arena-match .board{grid-template-rows:40px 18px 22px auto 32px minmax(0,1fr) 90px}
+  .game-mount .arena-match .turn-controls{padding-block:3px}
+  .game-mount .arena-match .turn-controls .turn-action{min-height:24px;font-size:10px}
   .game-mount .arena-match .scoreboard-value{font-size:30px}
   .game-mount .arena-match .scoreboard-player{padding:3px 9px}
   .game-mount .arena-match .scoreboard-name{font-size:10px}
@@ -328,7 +353,7 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
   .game-mount .arena-match .toolbar{gap:3px}
   .game-mount .arena-match .toolbar .button{font-size:9px;min-height:25px;padding:3px 5px}
   .game-mount .arena-match .toolbar [data-game-command='export']{display:none}
-  .game-mount .arena-match .board{grid-template-columns:minmax(0,1fr) 74px;grid-template-rows:44px 20px 24px 34px minmax(0,1fr) 108px}
+  .game-mount .arena-match .board{grid-template-columns:minmax(0,1fr) 74px;grid-template-rows:44px 20px 24px auto 34px minmax(0,1fr) 84px}
   .game-mount .arena-match .scoreboard-player{padding:4px 6px;gap:0 5px}
   .game-mount .arena-match .scoreboard-name{font-size:9px}
   .game-mount .arena-match .scoreboard-value{font-size:29px}
@@ -339,6 +364,10 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
   .game-mount .arena-match .phase-track{padding:2px 3px;gap:1px}
   .game-mount .arena-match .phase-step{font-size:8px;padding:3px 1px;min-height:0;gap:0}
   .game-mount .arena-match .phase-step b{display:none}
+  .game-mount .arena-match .turn-controls{padding:3px 4px;gap:5px}
+  .game-mount .arena-match .turn-label{flex:0 0 42px;font-size:9px}
+  .game-mount .arena-match .turn-actions{gap:3px}
+  .game-mount .arena-match .turn-controls .turn-action{min-height:25px;padding:3px 5px;font-size:9px}
   .game-mount .arena-match .board-tools{padding:3px 4px;gap:3px}
   .game-mount .arena-match .board-tools .button{font-size:8px;padding:3px 4px;min-height:25px;gap:2px}
   .game-mount .arena-match .arrow-clear{max-width:29px;overflow:hidden;white-space:nowrap;font-size:0!important;gap:0!important}
@@ -363,13 +392,13 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
   .game-mount .arena-match .card-back{width:18px;height:26px;min-height:0;min-width:0;font-size:10px}
   .game-mount .arena-match .stack-button span{font-size:5px}
   .game-mount .arena-match .deck-info-button{min-height:14px;font-size:6px;padding:1px}
-  .game-mount .arena-match .ration-zone{height:24px;gap:5px;flex-wrap:wrap;align-content:center;padding-top:1px}
+  .game-mount .arena-match .ration-zone{position:relative;height:24px;gap:4px;flex-wrap:wrap;align-content:center;padding:1px 0 0 31px}
   .game-mount .arena-match .ration-heading{font-size:6px;gap:3px}
   .game-mount .arena-match .ration-heading strong{font-size:6px}
   .game-mount .arena-match .ration-layout{height:13px;gap:4px;flex-basis:100%}
-  .game-mount .arena-match .ration-reserve{height:12px;flex-basis:20px}
-  .game-mount .arena-match .ration-reserve img{width:8px;height:11px}
-  .game-mount .arena-match .ration-reserve>b{top:2px;left:11px;font-size:7px}
+  .game-mount .arena-match .ration-reserve{position:absolute;left:0;top:50%;transform:translateY(-50%);width:28px;height:22px;gap:2px}
+  .game-mount .arena-match .ration-reserve img{width:10px;height:14px}
+  .game-mount .arena-match .ration-reserve>b{font-size:8px}
   .game-mount .arena-match .ration-cards{height:13px;gap:3px}
   .game-mount .arena-match .ration-card{height:11px;width:8px;min-width:3px;flex-basis:8px}
   .game-mount .arena-match .ration-card.spent{margin:0 1px}
@@ -390,17 +419,14 @@ body.game-playing .game-mount{height:100%;min-height:0;min-width:0}
   .game-mount .arena-match .stack-card-meta strong,.game-mount .arena-match .stack-card-meta{font-size:6px;line-height:1.2}
   .game-mount .arena-match .stack-card-meta small,.game-mount .arena-match .stack-card-meta>span{font-size:5px;line-height:1.1;margin-top:2px}
   .game-mount .arena-match .stack-empty{font-size:7px;line-height:1.3}
-  .game-mount .arena-match .hand-panel{padding:4px 5px 31px;grid-template-rows:19px minmax(0,1fr);gap:2px}
+  .game-mount .arena-match .hand-panel{padding:4px 5px 5px;grid-template-rows:19px minmax(0,1fr);gap:2px}
   .game-mount .arena-match .hand-heading{padding-right:57px;font-size:8px}
   .game-mount .arena-match .hand-heading select{font-size:8px;max-width:110px}
   .game-mount .arena-match .hand-heading .tiny-button{min-height:19px;font-size:7px;padding:2px 3px}
   .game-mount .arena-match .hand-cards{padding-inline:18px}
   .game-mount .arena-match .hand-cards>.game-card{height:100%;max-height:52px;max-width:38px}
-  .game-mount .arena-match .play-dropzone{bottom:85px;right:4px;width:57px;min-height:17px;padding:2px;font-size:5px}
+  .game-mount .arena-match .play-dropzone{bottom:61px;right:4px;width:57px;min-height:17px;padding:2px;font-size:5px}
   .game-mount .arena-match .play-dropzone strong{font-size:5px}
-  .game-mount .arena-match .arena-mobile-actions{display:flex;position:absolute;bottom:4px;left:5px;right:5px;gap:4px;z-index:12;min-width:0}
-  .game-mount .arena-match .arena-mobile-actions .action-button{padding:4px 5px;font-size:9px;min-height:23px;line-height:1.2;text-align:center;width:auto;flex:1}
-  .game-mount .arena-match.panels-open .arena-mobile-actions{display:none}
   .game-mount .arena-match .card-counter-badge{min-height:13px;padding:1px 2px;border-radius:3px;gap:1px;font-size:8px}
   .game-mount .arena-match .card-counter-badge .counter-icon{width:9px;height:9px;flex-basis:9px}
   .game-mount .arena-match .card-counter-badge b{font-size:8px}
