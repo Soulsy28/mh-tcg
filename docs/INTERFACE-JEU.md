@@ -6,6 +6,10 @@ La zone de partie utilise la hauteur disponible du navigateur sur ordinateur. Le
 
 L'agencement s'inspire des zones fixes, de la main en bas et des outils latéraux observés dans [TCG Arena](https://tcg-arena.fr/). Les illustrations et le thème de la Guilde restent ceux du projet.
 
+Le bandeau **Actions du tour**, sous les étapes, propose les commandes disponibles à cet instant. Pour engager un combat, choisis **Combat**, puis un Chasseur et un Monstre parmi les cibles proposées. **Terminer le tour** ouvre la fenêtre de réponse. **Passer** fait avancer cette fenêtre, le combat ou la pile selon la situation.
+
+En table libre, clique sur la **réserve de rations** du camp qui a la priorité pour ajouter, engager, dégager ou Manger une ration et ajuster les ressources temporaires. Clique sur un **score en haut du plateau** pour ajuster les points de ce camp. Le mélange manuel du deck se trouve dans **Infos du deck**.
+
 ## Tchat et carnet
 
 Le carnet contient les actions du jeu et les messages des joueurs dans leur ordre d'arrivée. Les messages portent le pseudo du camp concerné et utilisent une présentation distincte des événements de règles. Entrée ou le bouton d'envoi transmet le message. En test solo, un choix permet de faire parler chacun des deux camps ; en ligne, le camp de l'auteur est validé par l'hôte.
