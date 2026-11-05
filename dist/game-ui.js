@@ -3,6 +3,10 @@
   'use strict';
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const clone = value => JSON.parse(JSON.stringify(value));
+  const rationTypes = new Set(['ration-add','ration-tap','ration-untap','eat','pool-up','pool-down']);
+  const scoreTypes = new Set(['score-up','score-down']);
+  const deckTypes = new Set(['draw','shuffle']);
+  const turnTypes = new Set(['keep','mulligan','choose','skip','replace','continue','finish-resolution','endturn','endTurn','finish','pass']);
   const counterTypes = [
     {key:'Spirituel',en:'Spiritual',path:'M12 3c5 3 7 7 5 11-1 3-5 6-8 4-4-2-3-6 0-7 3-1 6 2 3 4M5 19c-4-4-2-10 2-13'},
     {key:'Chaleur',en:'Heat',path:'M13 3c1 5-3 5-1 9 2-1 3-3 3-5 5 5 5 12-2 14-7 1-11-7-6-12 0 4 3 5 3 2-1-3 0-6 3-8Z'},
@@ -75,7 +79,7 @@
     }
     const find = uid => allInstances().find(card => card.uid === uid);
     const definition = instance => cardView(byId.get(instance?.cardId));
-    const actor = () => state.priorityPlayer ?? state.activePlayer ?? 0;
+    const actor = () => state.pending?.player ?? state.priorityPlayer ?? state.activePlayer ?? 0;
     const handPlayer = () => localPlayer ?? perspective ?? actor();
     const phaseName = () => state.phase === 'response' ? state.flow === 'start' ? 'Début du tour · Réponses' : state.flow === 'end' ? 'Fin du tour · Réponses' : 'Réponses' : ({mulligan:'Main de départ',main:'Phase principale',combat:'Combat',ended:'Partie terminée',gameover:'Partie terminée',start:'Début du tour',manual:'Table libre',resolving:tr('Résolution d’un effet','Resolving an effect')})[state.phase] || state.phase || 'Partie';
     function visibleInstances() {
@@ -143,8 +147,41 @@
       const panel = content.querySelector('.inspector-panel');
       if (panel) panel.innerHTML = inspectorHtml();
     }
+    function scoreCaption(score) {
+      return `${score || 0} ${score===1?tr('point sur 6','point out of 6'):tr('points sur 6','points out of 6')}`;
+    }
     function scoreboardHtml() {
-      return `<section class="scoreboard" aria-label="${tr('Points de chasse','Hunt points')}" data-no-i18n>${state.players.map((player,index)=>`<div class="scoreboard-player ${state.activePlayer===index?'active':''}" data-score-player="${index}" aria-label="${escape(player.name)} · ${player.score || 0} ${tr('points sur 6','points out of 6')}"><strong class="scoreboard-name">${escape(player.name)}</strong><span class="scoreboard-value">${player.score || 0}<small> / 6</small></span><span class="scoreboard-goal">${tr('POINTS DE CHASSE','HUNT POINTS')}${state.activePlayer===index?` · ${tr('TOUR ACTIF','ACTIVE TURN')}`:''}</span></div>`).join('')}</section>`;
+      return `<section class="scoreboard" aria-label="${tr('Points de chasse','Hunt points')}" data-no-i18n>${state.players.map((player,index)=>{
+        const available = contextActions('score',index).length > 0;
+        return `<button type="button" class="scoreboard-player ${state.activePlayer===index?'active':''} hunt-score" data-score-player="${index}" data-game-context="score" data-game-player="${index}" aria-haspopup="dialog" ${available?'':'disabled'} aria-label="${escape(player.name)} · ${scoreCaption(player.score)}" title="${available?tr('Gérer les points de ce camp','Manage this side’s points'):tr('Points de chasse','Hunt points')}">
+          <strong class="scoreboard-name">${escape(player.name)}</strong>
+          <span class="scoreboard-value">${player.score || 0}<small> / 6</small></span>
+          <span class="scoreboard-goal">${tr('POINTS DE CHASSE','HUNT POINTS')}${state.activePlayer===index?` · ${tr('TOUR ACTIF','ACTIVE TURN')}`:''}</span>
+        </button>`;
+      }).join('')}</section>`;
+    }
+    function contextActions(kind, index) {
+      const player = actor();
+      if (busy || state.winner != null || (localPlayer !== null && localPlayer !== player)) return [];
+      const available = actions.filter(action => action.player === player);
+      if (kind === 'combat') return available.filter(action => action.type === 'attack' && action.targets?.length);
+      if (!state.players[index]) return [];
+      if (kind === 'score' && manual) {
+        const choiceId = String(index);
+        return available.filter(action => scoreTypes.has(action.type) && !action.sourceId && action.choices?.some(choice => choice.id === choiceId))
+          .map(action => ({...action, choiceId}));
+      }
+      if (index !== player) return [];
+      if (kind === 'rations' && manual) return available.filter(action => rationTypes.has(action.type) && !action.sourceId);
+      if (kind === 'deck') return available.filter(action => action.type === 'shuffle' && !action.sourceId);
+      return [];
+    }
+    function turnControlsHtml(turnActions) {
+      const combatReady = contextActions('combat').length > 0;
+      const showCombat = state.phase === 'main' && !state.pending && !state.stack?.length && !state.combat && state.winner == null;
+      const attack = showCombat ? `<button class="action-button turn-action ${combatReady?'turn-action-primary':''}" data-game-context="combat" aria-haspopup="dialog" ${combatReady?'':'disabled'} title="${combatReady?tr('Choisir un Chasseur pour attaquer','Choose a Hunter to attack'):tr('Aucune attaque disponible pour le moment','No attack available right now')}"><span aria-hidden="true">⚔</span> Combat</button>` : '';
+      const waitingFor = escape(state.players[actor()]?.name);
+      return `<section class="turn-controls" aria-label="${tr('Actions du tour','Turn actions')}" data-no-i18n><span class="turn-label">${tr('Actions du tour','Turn actions')}</span><div class="turn-actions">${attack}${turnActions.map(({a,index},position)=>actionHtml(a,index,`turn-action ${position===0&&!combatReady?'turn-action-primary':''}`)).join('')}${!turnActions.length&&state.winner==null?`<span class="turn-status">${tr('Priorité à','Priority to')} ${waitingFor}</span>`:''}</div></section>`;
     }
     function boardToolsHtml() {
       const player=localPlayer ?? actor(), own=(state.arrows || []).some(arrow=>arrow.player===player);
@@ -312,22 +349,31 @@
       const markers=counters.map(([key,value])=>`<span class="card-counter-badge counter-${escape(key)}" data-counter-kind="${escape(key)}" title="${escape(counterName(key)+': '+value)}" aria-label="${escape(counterName(key)+': '+value)}">${counterIcon(key)}${value>1?`<b>${value}</b>`:''}</span>`).join('');
       return `<button class="game-card ${instance.tapped?'tapped':''} ${selected===instance.uid?'selected':''} ${available?'available':''} ${draggable?'playable-card':''} ${arrowMode&&arrowNode?'arrow-pickable':''} ${arrowOrigin===arrowNode&&arrowNode?'arrow-origin':''} ${counterTool&&markerAction(instance.uid,counterTool)?'counter-pickable':''}" data-game-uid="${escape(instance.uid)}" data-game-preview-uid="${escape(instance.uid)}" ${arrowNode?`data-game-arrow-node="${escape(arrowNode)}"`:''} draggable="false" ${draggable?'data-game-draggable="true"':''} aria-label="${escape(card.name)}${instance.tapped?', '+tr('engagé','exhausted'):''}${creature?`, ${stats.remainingHp ?? card.hp} ${tr('PV restants','HP remaining')}`:''}${counters.length?', '+escape(counters.map(([key,value])=>counterName(key)+' '+value).join(', ')):''}" ${draggable?`title="${tr('Glisse cette carte vers sa zone de jeu, ou clique pour choisir une action.','Drag this card to its play area, or click to choose an action.')}"`:''}><img src="${escape(card.image)}" alt="${escape(card.name)}" draggable="false">${instance.tapped?`<span class="card-tap-label">${tr('ENGAGÉ','EXHAUSTED')}</span>`:''}${creature?`<span class="card-stats"><b>⚔ ${stats.force ?? card.force}</b><b class="${instance.damage?'hurt':''}">♥ ${stats.remainingHp ?? card.hp}</b></span>`:''}${markers?`<span class="card-counters card-counter-badges">${markers}</span>`:''}${showOwner?`<span class="owner-pip">${tr('Camp','Side')} ${(instance.controller ?? instance.owner ?? 0)+1}</span>`:''}</button>`;
     }
-    function rationsHtml(player) {
+    function rationsHtml(index) {
+      const player = state.players[index];
       const r = player.rations || {}, ready = Math.max(0,Math.min(12, r.ready || 0)), tapped = Math.max(0,Math.min(12, r.tapped || 0)), reserve = Math.max(0,Math.min(12, r.deck || 0));
       const ration = (spent, index) => `<div class="ration-card ${spent?'spent':''}" role="img" aria-label="${escape(tr('Ration','Ration')+' '+(index+1)+' · '+(spent?tr('engagée','exhausted'):tr('disponible','ready')))}"><img src="assets/game/ration.webp" alt="" draggable="false"></div>`;
-      return `<section class="ration-zone" aria-label="Rations" data-no-i18n><div class="ration-heading"><strong>RATIONS</strong><span><b>${ready}</b> ${tr('disponibles','ready')} · <b>${tapped}</b> ${tr('engagées','exhausted')}</span>${player.pool?`<span class="pool-chip">+${typeof player.pool==='number'?player.pool:0} ${tr('ressource du tour','turn resource')}</span>`:''}</div><div class="ration-layout"><div class="ration-reserve ${reserve?'':'empty'}" role="img" aria-label="${reserve} ${tr('rations en réserve','rations in reserve')}">${reserve?'<img src="assets/game/ration.webp" alt="" draggable="false">':'<span aria-hidden="true">∅</span>'}<b>${reserve}</b><small>${tr('Réserve','Reserve')}</small></div><div class="ration-cards" style="--rations-count:${Math.max(1,ready+tapped)}">${Array.from({length:Math.max(0,ready)},(_,index)=>ration(false,index)).join('')}${Array.from({length:Math.max(0,Math.min(tapped,12-ready))},(_,index)=>ration(true,ready+index)).join('')}${!ready&&!tapped?`<p class="empty-note">${tr('Une ration est ajoutée automatiquement au début du tour.','A ration is added automatically at the beginning of the turn.')}</p>`:''}</div></div></section>`;
+      const available = contextActions('rations',index).length > 0;
+      const title = available ? tr('Gérer les rations et ressources du tour','Manage rations and turn resources') : tr('Réserve de rations','Ration reserve');
+      return `<section class="ration-zone" aria-label="Rations" data-no-i18n>
+        <div class="ration-heading"><strong>RATIONS</strong><span><b>${ready}</b> ${tr('disponibles','ready')} · <b>${tapped}</b> ${tr('engagées','exhausted')}</span>${player.pool?`<span class="pool-chip">+${typeof player.pool==='number'?player.pool:0} ${tr('ressource du tour','turn resource')}</span>`:''}</div>
+        <div class="ration-layout">
+          <button type="button" class="ration-reserve ${reserve?'':'empty'}" data-game-context="rations" data-game-player="${index}" aria-haspopup="dialog" ${available?'':'disabled'} aria-label="${escape(player.name)} · ${reserve} ${tr('rations en réserve','rations in reserve')}" title="${title}">${reserve?'<img src="assets/game/ration.webp" alt="" draggable="false">':'<span aria-hidden="true">∅</span>'}<b>${reserve}</b><small>${tr('Réserve','Reserve')}</small></button>
+          <div class="ration-cards" style="--rations-count:${Math.max(1,ready+tapped)}">${Array.from({length:ready},(_,index)=>ration(false,index)).join('')}${Array.from({length:Math.min(tapped,12-ready)},(_,index)=>ration(true,ready+index)).join('')}${!ready&&!tapped?`<p class="empty-note">${tr('Une ration est ajoutée automatiquement au début du tour.','A ration is added automatically at the beginning of the turn.')}</p>`:''}</div>
+        </div>
+      </section>`;
     }
     function zoneHtml(index) {
       const p = state.players[index], camp = p.camp || [], items = p.items || [];
       const canDraw = drawAction(index);
-      return `<section class="player-zone ${state.activePlayer===index?'active-zone':''}" aria-label="${escape(tr('Camp de ','Camp of ')+p.name)}"><div class="player-heading"><div class="player-name"><span class="avatar">${index+1}</span><strong data-no-i18n>${escape(p.name)}</strong>${state.activePlayer===index?'<em>Joueur actif</em>':''}</div><div class="score">${p.score || 0}<span>/ 6 points</span></div></div><div class="player-body"><div class="chief-slot"><p class="zone-caption">Chef de chasse</p>${p.chief?cardHtml(p.chief):''}</div><div class="camp-area" data-game-drop="camp" data-game-player="${index}"><p class="zone-caption">Camp · ${camp.length} / 5 chasseurs</p><div class="camp-slots">${camp.map(card=>cardHtml(card)).join('')}${Array.from({length:Math.max(0,5-camp.length)},()=>'<span class="empty-slot" aria-hidden="true">✧</span>').join('')}</div>${items.length?`<div class="item-row" aria-label="Objets persistants">${items.map(card=>cardHtml(card)).join('')}</div>`:''}<span class="drop-hint" data-no-i18n>${tr('Dépose un Chasseur ou un Objet persistant ici','Drop a Hunter or a persistent Item here')}</span></div><div class="small-stacks"><div class="deck-controls"><button class="stack-button ${canDraw?'draw-available':''}" data-game-draw="${index}" data-no-i18n aria-label="${escape(canDraw?tr('Piocher une carte pour ','Draw a card for ')+p.name:tr('Deck de ','Deck of ')+p.name)}" title="${escape(canDraw?tr('Cliquer pour piocher 1 carte (effet manuel)','Click to draw 1 card (manual effect)'):tr('Informations du deck','Deck information'))}"><div class="card-back">✦</div><span>DECK · ${p.deck?.length || 0}</span>${canDraw?`<small>${tr('Cliquer pour piocher','Click to draw')}</small>`:''}</button><button class="tiny-button deck-info-button" data-game-zone="deck" data-game-player="${index}" data-no-i18n>${tr('Infos du deck','Deck info')}</button></div><button class="stack-button" data-game-zone="discard" data-game-player="${index}"><div class="card-back discard-stack">${p.discard?.length || 0}</div><span>DÉFAUSSE</span></button></div></div>${rationsHtml(p)}</section>`;
+      return `<section class="player-zone ${state.activePlayer===index?'active-zone':''}" aria-label="${escape(tr('Camp de ','Camp of ')+p.name)}"><div class="player-heading"><div class="player-name"><span class="avatar">${index+1}</span><strong data-no-i18n>${escape(p.name)}</strong>${state.activePlayer===index?'<em>Joueur actif</em>':''}</div><div class="score">${p.score || 0}<span>/ 6 points</span></div></div><div class="player-body"><div class="chief-slot"><p class="zone-caption">Chef de chasse</p>${p.chief?cardHtml(p.chief):''}</div><div class="camp-area" data-game-drop="camp" data-game-player="${index}"><p class="zone-caption">Camp · ${camp.length} / 5 chasseurs</p><div class="camp-slots">${camp.map(card=>cardHtml(card)).join('')}${Array.from({length:Math.max(0,5-camp.length)},()=>'<span class="empty-slot" aria-hidden="true">✧</span>').join('')}</div>${items.length?`<div class="item-row" aria-label="Objets persistants">${items.map(card=>cardHtml(card)).join('')}</div>`:''}<span class="drop-hint" data-no-i18n>${tr('Dépose un Chasseur ou un Objet persistant ici','Drop a Hunter or a persistent Item here')}</span></div><div class="small-stacks"><div class="deck-controls"><button class="stack-button ${canDraw?'draw-available':''}" data-game-draw="${index}" data-no-i18n aria-label="${escape(canDraw?tr('Piocher une carte pour ','Draw a card for ')+p.name:tr('Deck de ','Deck of ')+p.name)}" title="${escape(canDraw?tr('Cliquer pour piocher 1 carte (effet manuel)','Click to draw 1 card (manual effect)'):tr('Informations du deck','Deck information'))}"><div class="card-back">✦</div><span>DECK · ${p.deck?.length || 0}</span>${canDraw?`<small>${tr('Cliquer pour piocher','Click to draw')}</small>`:''}</button><button class="tiny-button deck-info-button" data-game-zone="deck" data-game-player="${index}" data-no-i18n>${tr('Infos du deck','Deck info')}</button></div><button class="stack-button" data-game-zone="discard" data-game-player="${index}"><div class="card-back discard-stack">${p.discard?.length || 0}</div><span>DÉFAUSSE</span></button></div></div>${rationsHtml(index)}</section>`;
     }
     function drawAction(player) {
       if (!state || busy || state.winner != null || player !== actor() || (localPlayer !== null && player !== localPlayer)) return null;
       return actions.find(action => action.type === 'draw' && action.player === player && !action.sourceId) || null;
     }
-    function actionHtml(action, index) {
-      return `<button class="action-button ${['keep','pass','endturn','endTurn','finish','continue','finish-resolution'].includes(action.type)?'primary':''}" data-no-i18n data-game-action="${index}" ${busy?'disabled':''}>${escape(label(action.label || action.type))}</button>`;
+    function actionHtml(action, index, classes = '') {
+      return `<button class="action-button ${classes}" data-no-i18n data-game-action="${index}" ${busy?'disabled':''}>${escape(label(action.label || action.type))}</button>`;
     }
     function render() {
       if (destroyed) return;
@@ -346,10 +392,10 @@
       const current = actor(), me = localPlayer ?? 0, shownHand = handPlayer();
       const hand = state.players[shownHand]?.hand || [], selectedInstance = inspectable(selected), selectedCard = definition(selectedInstance);
       if (inspectedUid && !inspectable(inspectedUid)) inspectedUid = null;
-      const globals = actions.map((a,index)=>({a,index})).filter(({a})=>!a.sourceId || ['choose','skip','keep','mulligan'].includes(a.type));
-      const primaryTypes = ['keep','mulligan','choose','skip','pass','endturn','endTurn','finish','continue','finish-resolution'];
-      const primary = globals.filter(({a}) => primaryTypes.includes(a.type)), tools = globals.filter(({a}) => !primaryTypes.includes(a.type));
-      const specific = actions.map((a,index)=>({a,index})).filter(({a})=>selectedInstance && a.sourceId===selectedInstance.uid && !globals.some(g=>g.a===a));
+      const available = actions.map((a,index)=>({a,index})).filter(({a})=>a.player===current && (localPlayer===null || current===localPlayer));
+      const primary = available.filter(({a})=>turnTypes.has(a.type));
+      const tools = available.filter(({a})=>!a.sourceId && !turnTypes.has(a.type) && !rationTypes.has(a.type) && !scoreTypes.has(a.type) && !deckTypes.has(a.type));
+      const specific = available.filter(({a})=>selectedInstance && a.sourceId===selectedInstance.uid && !turnTypes.has(a.type));
       const waiting = localPlayer !== null && current !== localPlayer && !actions.length;
       const help = state.winner!=null?'La chasse est terminée. Tu peux consulter les cartes ou revenir au salon.':state.pending?.label || (waiting?'L’adversaire prépare son action. Sa main et l’ordre des decks restent cachés.':state.phase==='mulligan'?'Conserve cette main ou remplace-la une fois.':state.stack?.length?'Réponds à l’effet en attente ou passe pour poursuivre la résolution.':state.combat?'Le combat progresse par étapes. Joue un Réflexe disponible ou passe.':state.phase==='response'?state.flow==='start'?'Résous les effets de début du tour. Tu peux jouer un Réflexe ou passer pour continuer.':state.flow==='end'?'La fin du tour est annoncée. Tu peux jouer un Réflexe ou passer pour continuer.':'Une fenêtre de réponse est ouverte. Tu peux jouer un Réflexe ou passer pour continuer.':manual?'Sélectionne une carte pour agir. Applique les effets particuliers avec les commandes de la table.':'Sélectionne une carte de ta main pour la jouer, ou une carte du terrain pour agir.');
       const title = manual?'Table libre':localPlayer===null?'Test automatisé':'Partie directe';
@@ -360,6 +406,7 @@
           ${scoreboardHtml()}
           <div class="board-meta"><span class="turn-mark"><i></i><strong>TOUR ${state.turn || 1}</strong><span>· ${escape(phaseName())}</span></span><span>OBJECTIF · 6 POINTS</span></div>
           ${phaseTrackHtml()}
+          ${turnControlsHtml(primary)}
           ${boardToolsHtml()}
           ${stackHtml()}
           <div class="board-scroll">${zoneHtml(1-me)}
@@ -374,12 +421,11 @@
             <div class="hand-cards" style="--card-count:${Math.max(1,hand.length)};--cards-count:${Math.max(1,hand.length)}">${handHidden?'<p class="hand-empty">Main masquée. Clique sur « Afficher la main » pour consulter tes cartes.</p>':hand.length?hand.map(card=>cardHtml(card,false,true)).join(''):'<p class="hand-empty">Aucune carte en main.</p>'}</div>
           </section>
           <div class="play-dropzone" data-game-drop="effect" data-no-i18n><strong>${tr('Techniques et objets instantanés','Techniques and instant items')}</strong><span>${tr('Dépose la carte ici · les cibles seront proposées si nécessaire','Drop a card here · choose targets when required')}</span></div>
-          <div class="arena-mobile-actions">${primary.map(({a,index})=>actionHtml(a,index)).join('')}</div>
         </div><aside class="side-column">
           <button class="button arena-panel-close" data-game-command="close-panels" data-no-i18n>${tr('Revenir au plateau','Back to the board')}</button>
           <section class="side-panel inspector-panel" tabindex="0" aria-label="${tr('Aperçu de la carte','Card preview')}" data-no-i18n>${inspectorHtml()}</section>
           <div class="game-command-column" tabindex="0" role="region" aria-label="${tr('Actions et historique','Actions and history')}">
-          <section class="side-panel actions-panel"><div class="panel-title">${waiting?'L’adversaire joue':'À vous de jouer'} <span class="phase-pill">Camp ${current+1}</span></div><p class="actor-label" data-no-i18n>${escape(state.players[current]?.name)}</p><p class="action-description" data-no-i18n>${escape(label(help))}</p><div class="action-list">${primary.map(({a,index})=>actionHtml(a,index)).join('')}</div>
+          <section class="side-panel actions-panel"><div class="panel-title">${waiting?'L’adversaire joue':'À vous de jouer'} <span class="phase-pill">Camp ${current+1}</span></div><p class="actor-label" data-no-i18n>${escape(state.players[current]?.name)}</p><p class="action-description" data-no-i18n>${escape(label(help))}</p>
             ${selectedCard?`<div class="selection-title"><img src="${escape(selectedCard.image)}" alt=""><span data-no-i18n>${escape(selectedCard.name)}</span><button class="icon-button" data-game-command="unselect" aria-label="Désélectionner">×</button></div><div class="action-list">${specific.map(({a,index})=>actionHtml(a,index)).join('') || '<p class="empty-note">Aucune action disponible pour cette carte à cet instant.</p>'}</div><button class="button quiet full" data-game-detail="${selectedCard.id}">Lire la carte</button>`:''}
             ${tools.length?`<details class="table-tools"><summary data-no-i18n>${tr('Commandes de la table','Table commands')} <small>${tools.length}</small></summary><div class="action-list">${tools.map(({a,index})=>actionHtml(a,index)).join('')}</div></details>`:''}
           </section>
@@ -406,10 +452,41 @@
       queueArrows();
     }
     function showDialog(title, body, footer = '', view = null) {
+      const focusedCandidate = dialog.open && document.activeElement?.dataset?.gameCandidate;
       modalView = view;
       dialog.innerHTML = `<div class="modal-heading"><h2 id="mh-game-dialog-title">${title}</h2><button class="icon-button" data-game-close aria-label="Fermer">×</button></div><div class="modal-body">${body}</div>${footer?`<div class="modal-footer">${footer}</div>`:''}`;
       i18n?.apply(dialog);
       if (!dialog.open) dialog.showModal();
+      else if (focusedCandidate) [...dialog.querySelectorAll('[data-game-candidate]')].find(button=>button.dataset.gameCandidate===focusedCandidate)?.focus();
+    }
+    function contextButtons(available) {
+      if (!available.length) return '';
+      return `<div class="context-actions">${available.map(action=>`<button class="action-button game-action" data-no-i18n data-game-candidate="${escape(action.id)}">${escape(label(action.label || action.type))}</button>`).join('')}</div>`;
+    }
+    function showContext(kind, index, drawAttempt = false) {
+      if (kind === 'deck') return showZone(index,'deck',drawAttempt);
+      const available = contextActions(kind,index);
+      if (!available.length) {
+        if (modalView?.type === 'context') closeDialog();
+        return;
+      }
+      const view = {type:'context',kind,index,actor:actor()};
+      if (kind === 'combat') {
+        const camp = state.players[actor()].camp || [];
+        const attackers = available.map(action => {
+          const slot = camp.findIndex(card => card.uid === action.sourceId) + 1;
+          return slot ? {...action, label:`${action.label} · ${tr('Place','Slot')} ${slot}`} : action;
+        });
+        showDialog(tr('Engager un combat','Start a combat'),`<p class="context-summary" data-no-i18n>${tr('Choisis le Chasseur qui attaque. Tu pourras ensuite choisir sa cible.','Choose the attacking Hunter, then its target.')}</p>${contextButtons(attackers)}`,'',view);
+        return;
+      }
+      const player = state.players[index];
+      const heading = kind === 'score' ? tr('Points de chasse','Hunt points') : tr('Réserve de rations','Ration reserve');
+      const r = player.rations || {};
+      const summary = kind === 'score'
+        ? scoreCaption(player.score)
+        : `${tr('Réserve','Reserve')} ${r.deck || 0} · ${tr('Dégagées','Ready')} ${r.ready || 0} · ${tr('Engagées','Exhausted')} ${r.tapped || 0} · ${tr('Ressources temporaires','Temporary resources')} ${player.pool || 0}`;
+      showDialog(`<span data-no-i18n>${heading} · ${escape(player.name)}</span>`,`<p class="context-summary" data-no-i18n>${summary}</p>${contextButtons(available)}`,'',view);
     }
     function closeDialog() { if (dialog.open) dialog.close(); modalAction = null; targetSelection = []; modalView = null; }
     function detail(id) {
@@ -469,9 +546,24 @@
         if (action) return chooseAction({...action});
         return showZone(player, 'deck', true);
       }
+      if (data.gameContext) {
+        if (!busy && !dialog.open) showContext(data.gameContext, Number(data.gamePlayer));
+        return;
+      }
       if (data.gameDetail) return detail(data.gameDetail);
-      if (data.gameCandidate != null) { const action=actions.find(candidate=>candidate.id===data.gameCandidate);if(action&&!busy)chooseAction({...action});else closeDialog();return; }
-      if (data.gameAction != null) { const action=actions[Number(data.gameAction)]; if(action && !busy)chooseAction({...action}); return; }
+      if (data.gameCandidate != null) {
+        const view = modalView;
+        const available = view?.type === 'context' ? contextActions(view.kind,view.index) : actions;
+        const action = available.find(candidate=>candidate.id===data.gameCandidate && candidate.player===actor());
+        if (dialog.open && action && !busy && (localPlayer===null || localPlayer===action.player)) chooseAction({...action});
+        else closeDialog();
+        return;
+      }
+      if (data.gameAction != null) {
+        const action = actions[Number(data.gameAction)];
+        if (action && !busy && action.player===actor() && (localPlayer===null || localPlayer===action.player)) chooseAction({...action});
+        return;
+      }
       if (data.gameChoice != null && modalAction) { const choice=modalAction.choices?.[Number(data.gameChoice)]; if(choice==null)return; chooseAction({...modalAction,choiceId:typeof choice==='string'?choice:choice.id ?? choice.value ?? Number(data.gameChoice)}); return; }
       if (data.gameTarget != null && modalAction) {
         const targetChoice=modalAction.targets?.[Number(data.gameTarget)]; if(!targetChoice)return;
@@ -487,7 +579,7 @@
     function showZone(index, zone, drawAttempt = false) {
       const player=state.players[index]; if(!player)return;
       if(zone==='deck') {
-        showDialog('Deck principal',`<p>Le deck de <span data-no-i18n>${escape(player.name)}</span> contient ${player.deck?.length || 0} cartes. Son ordre reste caché.</p>${drawAttempt?`<p data-no-i18n>${tr(manual?'La pioche manuelle est disponible uniquement pour le joueur qui a la priorité.':'La pioche de début de tour est automatique. Une autre pioche doit être autorisée par un effet. Le deck ne permet pas de piocher librement.',manual?'Only the player with priority can draw manually.':'The turn-start draw is automatic. An additional draw must be allowed by an effect. The deck does not allow unrestricted draws.')}</p>`:''}`, '', {type:'zone',index,zone,drawAttempt}); return;
+        showDialog('Deck principal',`<p>Le deck de <span data-no-i18n>${escape(player.name)}</span> contient ${player.deck?.length || 0} cartes. Son ordre reste caché.</p>${drawAttempt?`<p data-no-i18n>${tr(manual?'La pioche manuelle est disponible uniquement pour le joueur qui a la priorité.':'La pioche de début de tour est automatique. Une autre pioche doit être autorisée par un effet. Le deck ne permet pas de piocher librement.',manual?'Only the player with priority can draw manually.':'The turn-start draw is automatic. An additional draw must be allowed by an effect. The deck does not allow unrestricted draws.')}</p>`:''}${contextButtons(contextActions('deck',index))}`, '', {type:'context',kind:'deck',index,drawAttempt}); return;
       }
       showDialog(`Défausse · <span data-no-i18n>${escape(player.name)}</span>`, player.discard?.length ? `<div class="targets-grid">${player.discard.map(instance=>{const card=definition(instance);return card?`<button class="target-card" data-game-detail="${card.id}"><img src="${card.image}" alt=""><span data-no-i18n>${escape(card.name)}</span></button>`:'';}).join('')}</div>` : '<p>La défausse est vide.</p>', '', {type:'zone',index,zone});
     }
@@ -499,6 +591,7 @@
       if(!open || !view)return;
       if(view.type==='detail')detail(view.id);
       else if(view.type==='zone')showZone(view.index,view.zone,view.drawAttempt);
+      else if(view.type==='context')showContext(view.kind,view.index,view.drawAttempt);
       else if(view.type==='targets' && modalAction)renderTargets();
       else if(view.type==='choices' && modalAction)chooseAction(modalAction);
       else if(view.type==='effect-actions') {
@@ -688,9 +781,17 @@
         state=nextState;actions=Array.isArray(nextActions)?nextActions:[];
         if(counterTool&&!counterAvailable(counterTool))counterTool=null;
         if(selected && !find(selected))selected=null;
-        // Une action distante peut rendre une sélection ouverte périmée.
-        if(dialog.open && modalAction && !actions.some(action=>action.id===modalAction.id))closeDialog();
+        // Une action distante peut conserver le même identifiant, mais changer l’acteur ou les cibles.
+        if (dialog.open && modalAction) {
+          const current = actions.find(action => action.id===modalAction.id && action.player===modalAction.player);
+          if (!current || current.targetCount!==modalAction.targetCount || current.targetMin!==modalAction.targetMin ||
+            modalAction.targets?.some(target=>!current.targets?.some(next=>next.id===target.id)) ||
+            modalAction.choices?.some(choice=>!current.choices?.some(next=>(next.id ?? next)===(choice.id ?? choice)))) closeDialog();
+        }
+        const view = dialog.open ? modalView : null;
+        if (view?.type === 'context' && view.kind !== 'deck' && view.actor !== actor()) closeDialog();
         render();
+        if (dialog.open && view?.type === 'context') showContext(view.kind,view.index,view.drawAttempt);
       },
       destroy() {
         if(destroyed)return;destroyed=true;closeDialog();unsubscribeLanguage?.();
